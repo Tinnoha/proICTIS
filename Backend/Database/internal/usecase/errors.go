@@ -9,6 +9,7 @@ var (
 	ErrNotFound  = errors.New("Is not found")
 	ErrIntenal   = errors.New("Something get wrong")
 	ErrThisExist = errors.New("This is exists")
+	ErrWrongData = errors.New("Wrong data")
 )
 
 func ErrThisExists(that string, takenname string) error {

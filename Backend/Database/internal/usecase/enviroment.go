@@ -2,20 +2,22 @@ package usecase
 
 import (
 	"database/internal/entity"
+
+	"github.com/gofrs/uuid"
 )
 
 type EnviromentRepository interface {
 	GetAll() []entity.Enviroment
 	GetByType(TypeOfEnviroment string) ([]entity.Enviroment, error)
-	GetById(id int) (entity.Enviroment, error)
+	GetById(id uuid.UUID) (entity.Enviroment, error)
 	Add(enviroment entity.Enviroment) (entity.Enviroment, error)
 	AddType(TypeOfEnviroment string) error
 	Edit(enviroment entity.Enviroment) (entity.Enviroment, error)
-	Delete(id int) error
-	IsExists(id int) bool
+	Delete(id uuid.UUID) error
+	IsExists(id uuid.UUID) bool
 	NameIsTaken(name string) bool
 	TypeIsExsits(TypeOfEnviroment string) bool
-	SetActive(id int, active bool) (entity.Enviroment, error)
+	SetActive(id uuid.UUID, active bool) (entity.Enviroment, error)
 }
 
 type EnviromentUsecase struct {
@@ -53,7 +55,7 @@ func (uc *EnviromentUsecase) GetByType(TypeOfEnviroment string) ([]entity.Enviro
 	return vr, nil
 }
 
-func (uc *EnviromentUsecase) GetById(id int) (entity.Enviroment, error) {
+func (uc *EnviromentUsecase) GetById(id uuid.UUID) (entity.Enviroment, error) {
 	exists := uc.EnviromentRepo.IsExists(id)
 
 	if !exists {
@@ -113,7 +115,7 @@ func (uc *EnviromentUsecase) AddType(TypeOfEnviroment string) error {
 	return nil
 }
 
-func (uc *EnviromentUsecase) Edit(id int, enviroment entity.Enviroment) (entity.Enviroment, error) {
+func (uc *EnviromentUsecase) Edit(id uuid.UUID, enviroment entity.Enviroment) (entity.Enviroment, error) {
 	exists := uc.EnviromentRepo.IsExists(id)
 
 	if !exists {
@@ -129,7 +131,7 @@ func (uc *EnviromentUsecase) Edit(id int, enviroment entity.Enviroment) (entity.
 	return glasses, nil
 }
 
-func (uc *EnviromentUsecase) Delete(id int) error {
+func (uc *EnviromentUsecase) Delete(id uuid.UUID) error {
 	exists := uc.EnviromentRepo.IsExists(id)
 
 	if !exists {
@@ -145,7 +147,7 @@ func (uc *EnviromentUsecase) Delete(id int) error {
 	return nil
 }
 
-func (uc *EnviromentUsecase) IsExists(id int) bool {
+func (uc *EnviromentUsecase) IsExists(id uuid.UUID) bool {
 	return uc.EnviromentRepo.IsExists(id)
 }
 
@@ -153,7 +155,7 @@ func (uc *EnviromentUsecase) TypeIsExsits(TypeOfEnviroment string) bool {
 	return uc.EnviromentRepo.TypeIsExsits(TypeOfEnviroment)
 }
 
-func (uc *EnviromentUsecase) SetActive(id int, active bool) (entity.Enviroment, error) {
+func (uc *EnviromentUsecase) SetActive(id uuid.UUID, active bool) (entity.Enviroment, error) {
 	exists := uc.EnviromentRepo.IsExists(id)
 
 	if !exists {

@@ -1,14 +1,18 @@
 package usecase
 
-import "database/internal/entity"
+import (
+	"database/internal/entity"
+
+	"github.com/gofrs/uuid"
+)
 
 type UserRepository interface {
-	GetById(id int) (entity.User, error)
+	GetById(id uuid.UUID) (entity.User, error)
 	GetByEmail(email string) (entity.User, error)
 	CreateUser(entity.User) (entity.User, error)
-	MakeAdmin(id int) (entity.User, error)
-	MakeSuperAdmin(id int) (entity.User, error)
-	IsExistsById(id int) bool
+	MakeAdmin(id uuid.UUID) (entity.User, error)
+	MakeSuperAdmin(id uuid.UUID) (entity.User, error)
+	IsExistsById(id uuid.UUID) bool
 	IsExistsByEmail(email string) bool
 }
 
@@ -24,7 +28,7 @@ func NewUserUseCase(
 	}
 }
 
-func (uc *UserUseCase) GetById(id int) (entity.User, error) {
+func (uc *UserUseCase) GetById(id uuid.UUID) (entity.User, error) {
 	exists := uc.UserRepo.IsExistsById(id)
 
 	if !exists {
@@ -55,6 +59,8 @@ func (uc *UserUseCase) GetByEmail(email string) (entity.User, error) {
 }
 
 func (uc *UserUseCase) CreateUser(vasy []entity.User) ([]entity.User, error) {
+	rezult := []entity.User{}
+
 	for _, annya := range vasy {
 
 		exists := uc.UserRepo.IsExistsByEmail(annya.Email)
@@ -63,17 +69,25 @@ func (uc *UserUseCase) CreateUser(vasy []entity.User) ([]entity.User, error) {
 			return []entity.User{}, ErrThisExists("email", annya.Email)
 		}
 
-		_, err := uc.UserRepo.CreateUser(annya)
+		vasya, err := uc.UserRepo.CreateUser(annya)
 
 		if err != nil {
 			return []entity.User{}, ErrInntenal(err)
 		}
+
+		vasya.Id, err = uuid.NewV4()
+
+		if err != nil {
+			return []entity.User{}, ErrInntenal(err)
+		}
+
+		rezult = append(rezult, vasya)
 	}
 
 	return vasy, nil
 }
 
-func (uc *UserUseCase) MakeAdmin(id int) (entity.User, error) {
+func (uc *UserUseCase) MakeAdmin(id uuid.UUID) (entity.User, error) {
 	exists := uc.UserRepo.IsExistsById(id)
 
 	if !exists {
@@ -89,7 +103,7 @@ func (uc *UserUseCase) MakeAdmin(id int) (entity.User, error) {
 	return vasya, nil
 }
 
-func (uc *UserUseCase) MakeSuperAdmin(id int) (entity.User, error) {
+func (uc *UserUseCase) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
 	exists := uc.UserRepo.IsExistsById(id)
 
 	if !exists {
@@ -105,8 +119,8 @@ func (uc *UserUseCase) MakeSuperAdmin(id int) (entity.User, error) {
 	return vasya, nil
 }
 
-func (uc *UserUseCase) IsExistsById(id int) bool {
-	return uc.IsExistsById(id)
+func (uc *UserUseCase) IsExistsById(id uuid.UUID) bool {
+	return uc.UserRepo.IsExistsById(id)
 }
 
 func (uc *UserUseCase) IsExistsByEmail(email string) bool {
