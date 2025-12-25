@@ -15,16 +15,14 @@ type BookingRepository interface {
 
 	Book(UserId uuid.UUID, EnviromentId uuid.UUID, Start time.Time, End time.Time) (entity.Booking, error) // +
 
-	IsTaken(EnviromentId uuid.UUID, start time.Time, end time.Time) (bool, error)
-
 	AcceptBooking(BookingId uuid.UUID) (entity.Booking, error)
 	CancelBooking(BookingId uuid.UUID) error
 	ReturnEnviroment(BookingId uuid.UUID) error
-	DeleteBooking(BookingId uuid.UUID) error
 
 	EditStatusBooking(BookingId uuid.UUID, status string) (entity.Booking, error)
-
+	DeleteBooking(BookingId uuid.UUID) error
 	IsExists(BoookingId uuid.UUID) bool
+	IsTaken(EnviromentId uuid.UUID, start time.Time, end time.Time) (bool, error)
 }
 
 type BookingUseCase struct {

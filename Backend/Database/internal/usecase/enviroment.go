@@ -10,14 +10,18 @@ type EnviromentRepository interface {
 	GetAll() []entity.Enviroment
 	GetByType(TypeOfEnviroment string) ([]entity.Enviroment, error)
 	GetById(id uuid.UUID) (entity.Enviroment, error)
+
 	Add(enviroment entity.Enviroment) (entity.Enviroment, error)
 	AddType(TypeOfEnviroment string) error
+
 	Edit(enviroment entity.Enviroment) (entity.Enviroment, error)
+	SetActive(id uuid.UUID, active bool) (entity.Enviroment, error)
+
 	Delete(id uuid.UUID) error
+
 	IsExists(id uuid.UUID) bool
 	NameIsTaken(name string) bool
 	TypeIsExsits(TypeOfEnviroment string) bool
-	SetActive(id uuid.UUID, active bool) (entity.Enviroment, error)
 }
 
 type EnviromentUsecase struct {
