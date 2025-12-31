@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"database/internal/entity"
+	"database/sql"
+	"errors"
 
 	"github.com/gofrs/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type UserRepository interface {
@@ -12,8 +15,6 @@ type UserRepository interface {
 	CreateUser(entity.User) (entity.User, error)
 	MakeAdmin(id uuid.UUID) (entity.User, error)
 	MakeSuperAdmin(id uuid.UUID) (entity.User, error)
-	IsExistsById(id uuid.UUID) bool
-	IsExistsByEmail(email string) bool
 }
 
 type UserUseCase struct {
@@ -29,29 +30,24 @@ func NewUserUseCase(
 }
 
 func (uc *UserUseCase) GetById(id uuid.UUID) (entity.User, error) {
-	exists := uc.UserRepo.IsExistsById(id)
-
-	if !exists {
-		return entity.User{}, ErrNotFound
-	}
-
 	vasya, err := uc.UserRepo.GetById(id)
 	if err != nil {
-		return entity.User{}, ErrInntenal(err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, ErrNotFound
+		} else {
+			return entity.User{}, ErrInntenal(err)
+		}
 	}
 
 	return vasya, nil
 }
 
 func (uc *UserUseCase) GetByEmail(email string) (entity.User, error) {
-	exists := uc.UserRepo.IsExistsByEmail(email)
-
-	if !exists {
-		return entity.User{}, ErrNotFound
-	}
-
 	vasya, err := uc.UserRepo.GetByEmail(email)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, ErrNotFound
+		}
 		return entity.User{}, ErrInntenal(err)
 	}
 
@@ -62,41 +58,37 @@ func (uc *UserUseCase) CreateUser(vasy []entity.User) ([]entity.User, error) {
 	rezult := []entity.User{}
 
 	for _, annya := range vasy {
-
-		exists := uc.UserRepo.IsExistsByEmail(annya.Email)
-
-		if exists {
-			return []entity.User{}, ErrThisExists("email", annya.Email)
+		Id, err := uuid.NewV4()
+		annya.Id = Id
+		if err != nil {
+			return []entity.User{}, ErrInntenal(err)
 		}
 
 		vasya, err := uc.UserRepo.CreateUser(annya)
 
 		if err != nil {
-			return []entity.User{}, ErrInntenal(err)
-		}
-
-		vasya.Id, err = uuid.NewV4()
-
-		if err != nil {
-			return []entity.User{}, ErrInntenal(err)
+			var pgerr *pgconn.PgError
+			if errors.As(err, &pgerr) && pgerr.Code == "23505" {
+				return []entity.User{}, ErrThisExists("email", annya.Email)
+			} else {
+				return []entity.User{}, ErrInntenal(err)
+			}
 		}
 
 		rezult = append(rezult, vasya)
 	}
 
-	return vasy, nil
+	return rezult, nil
 }
 
 func (uc *UserUseCase) MakeAdmin(id uuid.UUID) (entity.User, error) {
-	exists := uc.UserRepo.IsExistsById(id)
-
-	if !exists {
-		return entity.User{}, ErrNotFound
-	}
 
 	vasya, err := uc.UserRepo.MakeAdmin(id)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, ErrNotFound
+		}
 		return entity.User{}, ErrInntenal(err)
 	}
 
@@ -104,25 +96,15 @@ func (uc *UserUseCase) MakeAdmin(id uuid.UUID) (entity.User, error) {
 }
 
 func (uc *UserUseCase) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
-	exists := uc.UserRepo.IsExistsById(id)
-
-	if !exists {
-		return entity.User{}, ErrNotFound
-	}
 
 	vasya, err := uc.UserRepo.MakeSuperAdmin(id)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, ErrNotFound
+		}
 		return entity.User{}, ErrInntenal(err)
 	}
 
 	return vasya, nil
-}
-
-func (uc *UserUseCase) IsExistsById(id uuid.UUID) bool {
-	return uc.UserRepo.IsExistsById(id)
-}
-
-func (uc *UserUseCase) IsExistsByEmail(email string) bool {
-	return uc.IsExistsByEmail(email)
 }

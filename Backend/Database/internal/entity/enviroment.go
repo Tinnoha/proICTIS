@@ -11,3 +11,8 @@ type Enviroment struct {
 	Auditory         string    `json:"auditory"`
 	IsActive         bool      `json:"is_active"`
 }
+
+type TypeOfEnviroment struct {
+	Id   uuid.UUID
+	Name string
+}

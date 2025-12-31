@@ -13,9 +13,9 @@ var (
 )
 
 func ErrThisExists(that string, takenname string) error {
-	return fmt.Errorf(ErrThisExist.Error(), ":", that, takenname)
+	return fmt.Errorf("%w: %s : %s", ErrThisExist, that, takenname)
 }
 
 func ErrInntenal(err error) error {
-	return fmt.Errorf(ErrIntenal.Error(), err.Error())
+	return fmt.Errorf("%s:%w", ErrIntenal.Error(), err.Error())
 }

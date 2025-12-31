@@ -13,5 +13,4 @@ type Booking struct {
 	BookStart    time.Time
 	BookEnd      time.Time
 	Status       string
-	mes          string
 }

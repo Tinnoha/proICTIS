@@ -1,8 +1,6 @@
 package entity
 
 import (
-	"time"
-
 	"github.com/gofrs/uuid"
 )
 
@@ -14,6 +12,4 @@ type User struct {
 	AvatarURL     string    `json:"avatar_url"`
 	Role          string    `json:"role"`
 	TokenProvider int       `json:"tokenProvider"`
-
-	CreatedAt time.Time `json:"created_at"`
 }
