@@ -224,19 +224,29 @@ func (e *enviromentRepo) GetTypes() ([]entity.TypeOfEnviroment, error) {
 }
 
 func (e *enviromentRepo) Add(enviroment entity.Enviroment) (entity.Enviroment, error) {
+	enviromentId, err := uuid.NewV4()
+
+	if err != nil {
+		return entity.Enviroment{}, err
+	}
+
+	enviroment.Id = enviromentId
 	var id uuid.UUID
 
-	err := e.db.QueryRow(`select id from proICTIS_type_of_enviroment where name = $1`, enviroment.TypeOfEnviroment).Scan(&id)
+	id, err = uuid.NewV4()
+
+	if err != nil {
+		return entity.Enviroment{}, err
+	}
+
+	err = e.db.QueryRow(`INSERT INTO proICTIS_type_of_enviroment 
+	(id, name) values ($1, $2)
+	ON CONFLICT(name) DO NOTHING
+	RETURNING id`, id, enviroment.TypeOfEnviroment).Scan(&id)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			id, err = uuid.NewV4()
-
-			if err != nil {
-				return entity.Enviroment{}, err
-			}
-
-			_, err = e.db.Exec(`INSERT INTO proICTIS_type_of_enviroment (id, name) values ($1, $2)`, id, enviroment.TypeOfEnviroment)
+			err = e.db.QueryRow(`SELECT id from proICTIS_type_of_enviroment where name = $1`, enviroment.TypeOfEnviroment).Scan(&id)
 
 			if err != nil {
 				return entity.Enviroment{}, err
@@ -260,4 +270,16 @@ func (e *enviromentRepo) Add(enviroment entity.Enviroment) (entity.Enviroment, e
 	}
 
 	return enviroment, nil
+}
+
+func (e *enviromentRepo) Edit(enviroment entity.Enviroment) (entity.Enviroment, error) {
+
+}
+
+func (e *enviromentRepo) SetActive(id uuid.UUID, active bool) (entity.Enviroment, error) {
+
+}
+
+func (e *enviromentRepo) Delete(id uuid.UUID) error {
+
 }
