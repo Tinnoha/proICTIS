@@ -45,7 +45,7 @@ func (h *bookingHandlers) GetBookingByUserId(w http.ResponseWriter, r *http.Requ
 }
 
 /*
-pattern: /booking/?EnviromentId={EnviromtId}
+pattern: /booking/?EquipmentId={EnviromtId}
 method:  GET
 info:    Query
 
@@ -58,7 +58,7 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) GetBookingByEnviromentId(w http.ResponseWriter, r *http.Request) {
+func (h *bookingHandlers) GetBookingByEquipmentId(w http.ResponseWriter, r *http.Request) {
 
 }
 
@@ -112,6 +112,6 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) ReturnEnviroment(w http.ResponseWriter, r *http.Request) {
+func (h *bookingHandlers) ReturnEquipment(w http.ResponseWriter, r *http.Request) {
 
 }

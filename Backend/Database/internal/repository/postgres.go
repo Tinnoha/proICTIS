@@ -70,37 +70,37 @@ func CreateTables(db *sqlx.DB) error {
 		return err
 	}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS proICTIS_type_of_enviroment(
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS proICTIS_type_of_equipment(
 		id UUID PRIMARY KEY,
 		name varchar(255) NOT NULL UNIQUE
 		)
 	`)
 
 	if err != nil {
-		fmt.Println("Error with creating table proICTIS_type_of_enviroment")
+		fmt.Println("Error with creating table proICTIS_type_of_equipment")
 		return err
 	}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS proICTIS_enviroment(
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS proICTIS_equipment(
 		id UUID PRIMARY KEY,
 		name varchar(255),
 		description TEXT,
 		photo_url varchar(255),
-		type_id UUID NOT NULL REFERENCES proICTIS_type_of_enviroment(id) ON DELETE RESTRICT,
+		type_id UUID NOT NULL REFERENCES proICTIS_type_of_equipment(id) ON DELETE RESTRICT,
 		auditory varchar(255),
 		is_active boolean
 		)
 	`)
 
 	if err != nil {
-		fmt.Println("Error with creating table proICTIS_enviroment")
+		fmt.Println("Error with creating table proICTIS_equipment")
 		return err
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS proICTIS_booking(
 		id UUID PRIMARY KEY,
 		user_id UUID not null references proICTIS_user(id) on delete cascade,
-		enviroment_id UUID NOT NULL REFERENCES proICTIS_enviroment(id) on delete cascade,
+		equipment_id UUID NOT NULL REFERENCES proICTIS_equipment(id) on delete cascade,
 		book_start TIMESTAMPTZ,
 		book_end TIMESTAMPTZ,
 		status varchar(255)

@@ -7,10 +7,10 @@ import (
 )
 
 type Booking struct {
-	ID           uuid.UUID
-	UserId       int
-	EnviromentId int
-	BookStart    time.Time
-	BookEnd      time.Time
-	Status       string
+	ID          uuid.UUID
+	UserId      int
+	EquipmentId int
+	BookStart   time.Time
+	BookEnd     time.Time
+	Status      string
 }

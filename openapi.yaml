@@ -19,15 +19,15 @@ components:
         type: string
         format: uuid
       description: User identifier
-    EnviromentIdQuery:
-      name: enviroment_id
+    EquipmentIdQuery:
+      name: equipment_id
       in: query
       required: true
       schema:
         type: string
         format: uuid
       description: Equipment identifier
-    EnviromentTypeQuery:
+    EquipmentTypeQuery:
       name: type
       in: query
       required: true
@@ -42,8 +42,8 @@ components:
         type: string
         format: uuid
       description: Booking identifier
-    EnviromentIdPath:
-      name: enviroment_id
+    EquipmentIdPath:
+      name: equipment_id
       in: path
       required: true
       schema:
@@ -75,8 +75,8 @@ components:
                 - INTERNAL_ERROR
                 - ALREADY_EXISTS
                 - WRONG_DATA
-                - ENVIROMENT_NOT_ACTIVE
-                - ENVIROMENT_TAKEN
+                - EQUIPMENT_NOT_ACTIVE
+                - EQUIPMENT_TAKEN
                 - USER_NOT_FOUND
                 - EMAIL_EXISTS
                 - BOOKING_NOT_WAIT_STATUS
@@ -113,7 +113,7 @@ components:
           type: string
           format: date-time
     
-    Enviroment:
+    Equipment:
       type: object
       required: [id, name, type, auditory, is_active]
       properties:
@@ -137,7 +137,7 @@ components:
         is_active:
           type: boolean
     
-    TypeOfEnviroment:
+    TypeOfEquipment:
       type: object
       required: [id, name]
       properties:
@@ -150,7 +150,7 @@ components:
     
     Booking:
       type: object
-      required: [id, user_id, enviroment_id, book_start, book_end, status]
+      required: [id, user_id, equipment_id, book_start, book_end, status]
       properties:
         id:
           type: string
@@ -158,7 +158,7 @@ components:
         user_id:
           type: string
           format: uuid
-        enviroment_id:
+        equipment_id:
           type: string
           format: uuid
         book_start:
@@ -177,12 +177,12 @@ components:
     
     CreateBookingRequest:
       type: object
-      required: [user_id, enviroment_id, book_start, book_end]
+      required: [user_id, equipment_id, book_start, book_end]
       properties:
         user_id:
           type: string
           format: uuid
-        enviroment_id:
+        equipment_id:
           type: string
           format: uuid
         book_start:
@@ -217,7 +217,7 @@ components:
           default: 0
           description: Used for registration via Yandex API
     
-    CreateEnviromentRequest:
+    CreateequipmentRequest:
       type: object
       required: [name, type, auditory]
       properties:
@@ -239,7 +239,7 @@ components:
           type: boolean
           default: true
     
-    UpdateEnviromentRequest:
+    UpdateEquipmentRequest:
       type: object
       properties:
         name:
@@ -276,9 +276,9 @@ components:
     
     CheckAvailabilityRequest:
       type: object
-      required: [enviroment_id, start, end]
+      required: [equipment_id, start, end]
       properties:
-        enviroment_id:
+        equipment_id:
           type: string
           format: uuid
         start:
@@ -441,7 +441,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   # ==================== EQUIPMENT ====================
-  /enviroments:
+  /equipments:
     get:
       tags: [Equipment]
       summary: Get all equipment
@@ -453,10 +453,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  enviroments:
+                  equipments:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Enviroment'
+                      $ref: '#/components/schemas/Equipment'
     
     post:
       tags: [Equipment]
@@ -466,7 +466,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEnviromentRequest'
+              $ref: '#/components/schemas/CreateEquipmentRequest'
       responses:
         '201':
           description: Equipment created
@@ -475,20 +475,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  enviroment:
-                    $ref: '#/components/schemas/Enviroment'
+                  equipment:
+                    $ref: '#/components/schemas/Equipment'
         '400':
           description: Invalid data
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
-  /enviroments/{enviroment_id}:
+  /equipments/{equipment_id}:
     get:
       tags: [Equipment]
       summary: Get equipment by ID
       parameters:
-        - $ref: '#/components/parameters/EnviromentIdPath'
+        - $ref: '#/components/parameters/EquipmentIdPath'
       responses:
         '200':
           description: Equipment information
@@ -497,8 +497,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  enviroment:
-                    $ref: '#/components/schemas/Enviroment'
+                  equipment:
+                    $ref: '#/components/schemas/Equipment'
         '404':
           description: Equipment not found
           content:
@@ -509,13 +509,13 @@ paths:
       tags: [Equipment]
       summary: Edit equipment
       parameters:
-        - $ref: '#/components/parameters/EnviromentIdPath'
+        - $ref: '#/components/parameters/EquipmentIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateEnviromentRequest'
+              $ref: '#/components/schemas/UpdateEquipmentRequest'
       responses:
         '200':
           description: Equipment updated
@@ -524,8 +524,8 @@ paths:
               schema:
                 type: object
                 properties:
-                  enviroment:
-                    $ref: '#/components/schemas/Enviroment'
+                  equipment:
+                    $ref: '#/components/schemas/Equipment'
         '404':
           description: Equipment not found
           content:
@@ -536,7 +536,7 @@ paths:
       tags: [Equipment]
       summary: Delete equipment
       parameters:
-        - $ref: '#/components/parameters/EnviromentIdPath'
+        - $ref: '#/components/parameters/EquipmentIdPath'
       responses:
         '204':
           description: Equipment deleted
@@ -546,12 +546,12 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
-  /enviroments/by-type:
+  /equipments/by-type:
     get:
       tags: [Equipment]
       summary: Get equipment by type
       parameters:
-        - $ref: '#/components/parameters/EnviromentTypeQuery'
+        - $ref: '#/components/parameters/EquipmentTypeQuery'
       responses:
         '200':
           description: List of equipment of specified type
@@ -560,22 +560,22 @@ paths:
               schema:
                 type: object
                 properties:
-                  enviroments:
+                  equipments:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Enviroment'
+                      $ref: '#/components/schemas/Equipment'
         '404':
           description: Equipment not found
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
-  /enviroments/status/{enviroment_id}:
+  /equipments/status/{equipment_id}:
     put:
       tags: [Equipment]
       summary: Change equipment active status
       parameters:
-        - $ref: '#/components/parameters/EnviromentIdPath'
+        - $ref: '#/components/parameters/EquipmentIdPath'
       requestBody:
         required: true
         content:
@@ -590,15 +590,15 @@ paths:
               schema:
                 type: object
                 properties:
-                  enviroment:
-                    $ref: '#/components/schemas/Enviroment'
+                  equipment:
+                    $ref: '#/components/schemas/Equipment'
         '404':
           description: Equipment not found
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
-  /enviroments/types:
+  /equipments/types:
     get:
       tags: [Types]
       summary: Get all equipment types
@@ -613,7 +613,7 @@ paths:
                   types:
                     type: array
                     items:
-                      $ref: '#/components/schemas/TypeOfEnviroment'
+                      $ref: '#/components/schemas/TypeOfEquipment'
     
     post:
       tags: [Types]
@@ -633,7 +633,7 @@ paths:
                 type: object
                 properties:
                   type:
-                    $ref: '#/components/schemas/TypeOfEnviroment'
+                    $ref: '#/components/schemas/TypeOfEquipment'
         '409':
           description: Equipment type already exists
           content:
@@ -694,7 +694,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
               example:
                 error:
-                  code: ENVIROMENT_TAKEN
+                  code: EQUIPMENT_TAKEN
                   message: equipment is already booked for this time period
 
   /bookings/by-user:
@@ -721,12 +721,12 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
-  /bookings/by-enviroment:
+  /bookings/by-equipment:
     get:
       tags: [Bookings]
       summary: Get equipment's bookings
       parameters:
-        - $ref: '#/components/parameters/EnviromentIdQuery'
+        - $ref: '#/components/parameters/EquipmentIdQuery'
       responses:
         '200':
           description: List of equipment's bookings
@@ -830,11 +830,11 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [available, enviroment_id]
+                required: [available, equipment_id]
                 properties:
                   available:
                     type: boolean
-                  enviroment_id:
+                  equipment_id:
                     type: string
                     format: uuid
                   message:

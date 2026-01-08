@@ -10,11 +10,11 @@ import (
 )
 
 type BookingRepository interface {
-	GetAllBooks() ([]entity.Booking, error)                                  // +
-	GetBooksByUserId(userId uuid.UUID) ([]entity.Booking, error)             // +
-	GetBooksByEnviromentId(EnviromentId uuid.UUID) ([]entity.Booking, error) // +
+	GetAllBooks() ([]entity.Booking, error)                                // +
+	GetBooksByUserId(userId uuid.UUID) ([]entity.Booking, error)           // +
+	GetBooksByEquipmentId(EquipmentId uuid.UUID) ([]entity.Booking, error) // +
 
-	Book(UserId uuid.UUID, EnviromentId uuid.UUID, Start time.Time, End time.Time) (entity.Booking, error) // +
+	Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.Time, End time.Time) (entity.Booking, error) // +
 
 	AcceptBooking(BookingId uuid.UUID) (entity.Booking, error)
 
@@ -23,20 +23,20 @@ type BookingRepository interface {
 }
 
 type BookingUseCase struct {
-	UserRepo       UserRepository
-	BookingRepo    BookingRepository
-	EnviromentRepo EnviromentRepository
+	UserRepo      UserRepository
+	BookingRepo   BookingRepository
+	EquipmentRepo EquipmentRepository
 }
 
 func NewBooknigUseCase(
 	userRepo UserRepository,
 	bookRepo BookingRepository,
-	enviromentRepo EnviromentRepository,
+	equipmentRepo EquipmentRepository,
 ) *BookingUseCase {
 	return &BookingUseCase{
-		UserRepo:       userRepo,
-		BookingRepo:    bookRepo,
-		EnviromentRepo: enviromentRepo,
+		UserRepo:      userRepo,
+		BookingRepo:   bookRepo,
+		EquipmentRepo: equipmentRepo,
 	}
 }
 
@@ -63,8 +63,8 @@ func (uc *BookingUseCase) GetBooksByUserId(id uuid.UUID) ([]entity.Booking, erro
 	return books, err
 }
 
-func (uc *BookingUseCase) GetBooksByEnviromentId(EnviromentId uuid.UUID) ([]entity.Booking, error) {
-	books, err := uc.BookingRepo.GetBooksByEnviromentId(EnviromentId)
+func (uc *BookingUseCase) GetBooksByEquipmentId(EquipmentId uuid.UUID) ([]entity.Booking, error) {
+	books, err := uc.BookingRepo.GetBooksByEquipmentId(EquipmentId)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -76,14 +76,14 @@ func (uc *BookingUseCase) GetBooksByEnviromentId(EnviromentId uuid.UUID) ([]enti
 	return books, err
 }
 
-func (uc *BookingUseCase) Book(UserId uuid.UUID, EnviromentId uuid.UUID, start time.Time, end time.Time) (entity.Booking, error) {
-	booking, err := uc.BookingRepo.Book(UserId, EnviromentId, start, end)
+func (uc *BookingUseCase) Book(UserId uuid.UUID, EquipmentId uuid.UUID, start time.Time, end time.Time) (entity.Booking, error) {
+	booking, err := uc.BookingRepo.Book(UserId, EquipmentId, start, end)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entity.Booking{}, ErrNotFound
 		} else if errors.Is(err, ErrThisExist) {
-			return entity.Booking{}, ErrThisExists("enviroment", EnviromentId.String())
+			return entity.Booking{}, ErrThisExists("equipment", EquipmentId.String())
 		}
 		return entity.Booking{}, ErrInntenal(err)
 	}
