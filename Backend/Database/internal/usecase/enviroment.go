@@ -16,8 +16,8 @@ type EnviromentRepository interface {
 
 	Add(enviroment entity.Enviroment) (entity.Enviroment, error)
 
-	Edit(enviroment entity.Enviroment) (entity.Enviroment, error)
-	SetActive(id uuid.UUID, active bool) (entity.Enviroment, error)
+	Edit(enviroment entity.Enviroment, id uuid.UUID) (entity.Enviroment, error)
+	SetActive(id uuid.UUID, active bool) error
 
 	Delete(id uuid.UUID) error
 }
@@ -96,7 +96,7 @@ func (uc *EnviromentUsecase) Add(Enviroment []entity.Enviroment) ([]entity.Envir
 func (uc *EnviromentUsecase) Edit(id uuid.UUID, enviroment entity.Enviroment) (entity.Enviroment, error) {
 	enviroment.Id = id
 
-	glasses, err := uc.EnviromentRepo.Edit(enviroment)
+	glasses, err := uc.EnviromentRepo.Edit(enviroment, id)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -121,15 +121,15 @@ func (uc *EnviromentUsecase) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (uc *EnviromentUsecase) SetActive(id uuid.UUID, active bool) (entity.Enviroment, error) {
-	activ, err := uc.EnviromentRepo.SetActive(id, active)
+func (uc *EnviromentUsecase) SetActive(id uuid.UUID, active bool) error {
+	err := uc.EnviromentRepo.SetActive(id, active)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Enviroment{}, ErrNotFound
+			return ErrNotFound
 		}
-		return entity.Enviroment{}, ErrInntenal(err)
+		return ErrInntenal(err)
 	}
 
-	return activ, nil
+	return nil
 }
