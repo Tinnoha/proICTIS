@@ -311,10 +311,20 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 	editedEquipment := entity.Equipment{}
 	args = append(args, ID)
 
-	_, err := e.db.Exec(pat, args...)
+	rez, err := e.db.Exec(pat, args...)
 
 	if err != nil {
 		return entity.Equipment{}, err
+	}
+
+	c, err := rez.RowsAffected()
+
+	if err != nil {
+		return entity.Equipment{}, err
+	}
+
+	if c == 0 {
+		return entity.Equipment{}, sql.ErrNoRows
 	}
 
 	err = e.db.QueryRow(`select 
@@ -343,17 +353,38 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 }
 
 func (e *equipmentRepo) SetActive(id uuid.UUID, active bool) error {
-	_, err := e.db.Exec(`update proICTIS_equipment set is_active = $1 where id = $2`, active, id)
+	rez, err := e.db.Exec(`update proICTIS_equipment set is_active = $1 where id = $2`, active, id)
 	if err != nil {
 		return err
 	}
+	c, err := rez.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if c == 0 {
+		return sql.ErrNoRows
+	}
+
 	return nil
 }
 
 func (e *equipmentRepo) Delete(id uuid.UUID) error {
-	_, err := e.db.Exec(`delete from proICTIS_equipment where id = $1`, id)
+	rez, err := e.db.Exec(`delete from proICTIS_equipment where id = $1`, id)
 	if err != nil {
 		return err
 	}
+
+	c, err := rez.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if c == 0 {
+		return sql.ErrNoRows
+	}
+
 	return nil
 }
