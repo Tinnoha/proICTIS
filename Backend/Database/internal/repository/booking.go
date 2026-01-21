@@ -3,6 +3,7 @@ package repository
 import (
 	"database/internal/entity"
 	"database/internal/usecase"
+	"database/sql"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -149,8 +150,8 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 	var using bool
 
 	err := b.db.QueryRow(`	
-	SELECT NO EXISTS(
-	SELCT 1 FROM proICTIS_booking
+	SELECT EXISTS(
+	SELECT 1 FROM proICTIS_booking
 	WHERE equipment_id = $1 and
 	book_start < $2 and
 	book_end > $3
@@ -173,9 +174,9 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 	book := entity.Booking{}
 
 	err = b.db.QueryRow(`INSERT INTO proICTIS_booking 
-	id, user_id,equipment_id,book_start,book_end,status 
+	(id, user_id,equipment_id,book_start,book_end,status )
 	VALUES ($1,$2,$3,$4,$5,$6)
-	RETURING id, user_id,equipment_id,book_start,book_end,status`,
+	RETURNING id, user_id,equipment_id,book_start,book_end,status`,
 		id, UserId, EquipmentId, Start, End, "Waiting answer",
 	).Scan(
 		&book.ID,
@@ -183,6 +184,7 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 		&book.EquipmentId,
 		&book.BookStart,
 		&book.BookEnd,
+		&book.Status,
 	)
 
 	if err != nil {
@@ -191,6 +193,46 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 
 	return book, nil
 }
-func (b *bookingRepo) AcceptBooking(BookingId uuid.UUID) (entity.Booking, error)
-func (b *bookingRepo) EditStatusBooking(BookingId uuid.UUID, status string) (entity.Booking, error)
-func (b *bookingRepo) DeleteBooking(BookingId uuid.UUID) error
+
+func (b *bookingRepo) EditStatusBooking(BookingId uuid.UUID, status string) (entity.Booking, error) {
+	book := entity.Booking{}
+
+	err := b.db.QueryRow(`
+		UPDATE proICTIS_booking 
+		SET status = $1 
+		WHERE id = $2
+		RETURNING id, user_id,equipment_id,book_start,book_end,status`,
+		status, BookingId).Scan(
+		&book.ID,
+		&book.UserId,
+		&book.EquipmentId,
+		&book.BookStart,
+		&book.BookEnd,
+		&book.Status,
+	)
+
+	if err != nil {
+		return entity.Booking{}, err
+	}
+
+	return book, nil
+}
+
+func (b *bookingRepo) DeleteBooking(BookingId uuid.UUID) error {
+	rez, err := b.db.Exec(`DELETE from proICTIS_booking where id = $1`, BookingId)
+	if err != nil {
+		return err
+	}
+
+	c, err := rez.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if c == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}

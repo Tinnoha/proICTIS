@@ -6,6 +6,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jmoiron/sqlx v1.4.0
+	golang.org/x/oauth2 v0.34.0
 )
 
 require (

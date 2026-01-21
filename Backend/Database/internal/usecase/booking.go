@@ -16,8 +16,6 @@ type BookingRepository interface {
 
 	Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.Time, End time.Time) (entity.Booking, error) // +
 
-	AcceptBooking(BookingId uuid.UUID) (entity.Booking, error)
-
 	EditStatusBooking(BookingId uuid.UUID, status string) (entity.Booking, error)
 	DeleteBooking(BookingId uuid.UUID) error
 }
@@ -95,8 +93,16 @@ func (uc *BookingUseCase) Book(UserId uuid.UUID, EquipmentId uuid.UUID, start ti
 	return booking, nil
 }
 
-func (uc *BookingUseCase) AcceptBooking(BookingId uuid.UUID) (entity.Booking, error) {
-	arenda, err := uc.BookingRepo.EditStatusBooking(BookingId, "Wait Time for Booking")
+func (uc *BookingUseCase) EditStatusBooking(BookingId uuid.UUID, status string) (entity.Booking, error) {
+	if status == "Cancle" || status == "Returned" {
+		err := uc.BookingRepo.DeleteBooking(BookingId)
+
+		if err != nil {
+			return entity.Booking{}, ErrInntenal(err)
+		}
+	}
+
+	arenda, err := uc.BookingRepo.EditStatusBooking(BookingId, status)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
