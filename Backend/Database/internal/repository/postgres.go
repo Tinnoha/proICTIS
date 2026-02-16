@@ -26,12 +26,12 @@ func NewDatabase() *sqlx.DB {
 
 	password := os.Getenv("DB_PASSWORD")
 	if password == "" {
-		password = "0000"
+		password = "5432"
 	}
 
 	dbname := os.Getenv("DB_NAME")
 	if dbname == "" {
-		dbname = "5432"
+		dbname = "postgres"
 	}
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",

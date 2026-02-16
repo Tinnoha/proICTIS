@@ -8,12 +8,24 @@ import (
 )
 
 /*
+type User struct {
+	Id            uuid.UUID `json:"id"`
+	FirstName     string    `json:"first_name"`
+	SecondName    string    `json:"second_name"`
+	Email         string    `json:"email"`
+	AvatarURL     string    `json:"avatar_url"`
+	Role          string    `json:"role"`
+	TokenProvider int       `json:"tokenProvider"`
+}
+
+
 type UserRepository interface {
 	GetById(id uuid.UUID) (entity.User, error)
 	GetByEmail(email string) (entity.User, error)
 	CreateUser(entity.User) (entity.User, error)
 	MakeAdmin(id uuid.UUID) (entity.User, error)
 	MakeSuperAdmin(id uuid.UUID) (entity.User, error)
+	CreateUser(vasya entity.User) entity.User
 }
 */
 
@@ -85,19 +97,17 @@ func (u *userRepo) CreateUser(user entity.User) (entity.User, error) {
 	}
 
 	return user, nil
-
 }
 
 func (u *userRepo) MakeAdmin(id uuid.UUID) (entity.User, error) {
 	user := entity.User{}
 
 	err := u.db.QueryRow(
-		`UPDATE users
+		`UPDATE PROICTIS_user
 		set role='Admin'
 		WHERE id = $1
 		RETURNING first_name, second_name, email,avatar_url,role,token_provider
 		`, id).Scan(
-		&user.Id,
 		&user.FirstName,
 		&user.SecondName,
 		&user.Email,
@@ -117,12 +127,11 @@ func (u *userRepo) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
 	user := entity.User{}
 
 	err := u.db.QueryRow(
-		`UPDATE users
+		`UPDATE PROICTIS_user
 		set role='Super_Admin'
 		WHERE id = $1
 		RETURNING first_name, second_name, email,avatar_url,role,token_provider
 		`, id).Scan(
-		&user.Id,
 		&user.FirstName,
 		&user.SecondName,
 		&user.Email,

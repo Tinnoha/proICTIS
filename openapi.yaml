@@ -33,7 +33,7 @@ components:
       required: true
       schema:
         type: string
-      description: Type of equipment (e.g., VR, 3D, etc.)
+      description: Type of equipment (e.g., VR, 3D printer, etc.)
     BookingIdPath:
       name: id
       in: path
@@ -62,7 +62,7 @@ components:
   schemas:
     ErrorResponse:
       type: object
-      required: [error]
+      required: [error, timestamp]
       properties:
         error:
           type: object
@@ -80,6 +80,7 @@ components:
                 - USER_NOT_FOUND
                 - EMAIL_EXISTS
                 - BOOKING_NOT_WAIT_STATUS
+                - BOOKING_NOT_WAIT_TIME_STATUS
             message:
               type: string
         timestamp:
@@ -105,13 +106,10 @@ components:
           nullable: true
         role:
           type: string
-          enum: [user, admin, super_admin]
+          enum: [student, admin, super_admin]
         token_provider:
           type: integer
           description: Used for registration via Yandex API
-        created_at:
-          type: string
-          format: date-time
     
     Equipment:
       type: object
@@ -130,7 +128,7 @@ components:
           nullable: true
         type:
           type: string
-          description: Type of equipment (e.g., VR, 3D, etc.)
+          description: Type of equipment (e.g., VR, 3D printer, etc.)
         auditory:
           type: string
           description: Location where equipment is stored
@@ -146,7 +144,7 @@ components:
           format: uuid
         name:
           type: string
-          description: Type name (e.g., VR, 3D, etc.)
+          description: Type name (e.g., VR, 3D printer, etc.)
     
     Booking:
       type: object
@@ -208,16 +206,12 @@ components:
         avatar_url:
           type: string
           nullable: true
-        role:
-          type: string
-          default: "user"
-          enum: [user, admin, super_admin]
         token_provider:
           type: integer
           default: 0
           description: Used for registration via Yandex API
     
-    CreateequipmentRequest:
+    CreateEquipmentRequest:
       type: object
       required: [name, type, auditory]
       properties:
@@ -231,7 +225,7 @@ components:
           nullable: true
         type:
           type: string
-          description: Type of equipment (e.g., VR, 3D, etc.)
+          description: Type of equipment (e.g., VR, 3D printer, etc.)
         auditory:
           type: string
           description: Location where equipment is stored
@@ -252,20 +246,10 @@ components:
           nullable: true
         type:
           type: string
-          description: Type of equipment (e.g., VR, 3D, etc.)
+          description: Type of equipment (e.g., VR, 3D printer, etc.)
         auditory:
           type: string
           description: Location where equipment is stored
-        is_active:
-          type: boolean
-    
-    CreateTypeRequest:
-      type: object
-      required: [name]
-      properties:
-        name:
-          type: string
-          description: Type name (e.g., VR, 3D, etc.)
     
     SetActiveRequest:
       type: object
@@ -287,6 +271,22 @@ components:
         end:
           type: string
           format: date-time
+    
+    EmailRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    
+    AdminRequest:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: string
+          format: uuid
 
 paths:
   # ==================== USERS ====================
@@ -314,16 +314,19 @@ paths:
           description: Invalid data
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Email already exists
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: EMAIL_EXISTS
                   message: email already exists
+                timestamp: "2024-01-01T12:00:00Z"
   
   /users/{id}:
     get:
@@ -345,7 +348,8 @@ paths:
           description: User not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   
   /users/email:
     post:
@@ -356,12 +360,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [email]
-              properties:
-                email:
-                  type: string
-                  format: email
+              $ref: '#/components/schemas/EmailRequest'
       responses:
         '200':
           description: User information
@@ -376,10 +375,11 @@ paths:
           description: User not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   
   /users/admin:
-    put:
+    patch:
       tags: [Users]
       summary: Make user an admin
       requestBody:
@@ -387,12 +387,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [user_id]
-              properties:
-                user_id:
-                  type: string
-                  format: uuid
+              $ref: '#/components/schemas/AdminRequest'
       responses:
         '200':
           description: User promoted to admin
@@ -407,10 +402,11 @@ paths:
           description: User not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   
   /users/superadmin:
-    put:
+    patch:
       tags: [Users]
       summary: Make user a super admin
       requestBody:
@@ -418,12 +414,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [user_id]
-              properties:
-                user_id:
-                  type: string
-                  format: uuid
+              $ref: '#/components/schemas/AdminRequest'
       responses:
         '200':
           description: User promoted to super admin
@@ -438,10 +429,33 @@ paths:
           description: User not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /auth/yandex:
+    get:
+      tags: [Users]
+      summary: Initiate Yandex OAuth login
+      responses:
+        '307':
+          description: Redirect to Yandex OAuth
+  
+  /auth/yandex/callback:
+    get:
+      tags: [Users]
+      summary: Yandex OAuth callback
+      responses:
+        '307':
+          description: Redirect to frontend after successful login
+        '500':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   # ==================== EQUIPMENT ====================
-  /equipments:
+  /equipment:
     get:
       tags: [Equipment]
       summary: Get all equipment
@@ -453,7 +467,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  equipments:
+                  equipment:
                     type: array
                     items:
                       $ref: '#/components/schemas/Equipment'
@@ -481,9 +495,10 @@ paths:
           description: Invalid data
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /equipments/{equipment_id}:
+  /equipment/{equipment_id}:
     get:
       tags: [Equipment]
       summary: Get equipment by ID
@@ -503,9 +518,10 @@ paths:
           description: Equipment not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     
-    put:
+    patch:
       tags: [Equipment]
       summary: Edit equipment
       parameters:
@@ -530,7 +546,8 @@ paths:
           description: Equipment not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     
     delete:
       tags: [Equipment]
@@ -544,9 +561,10 @@ paths:
           description: Equipment not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /equipments/by-type:
+  /equipment/by-type:
     get:
       tags: [Equipment]
       summary: Get equipment by type
@@ -560,18 +578,19 @@ paths:
               schema:
                 type: object
                 properties:
-                  equipments:
+                  equipment:
                     type: array
                     items:
                       $ref: '#/components/schemas/Equipment'
         '404':
-          description: Equipment not found
+          description: No equipment found with this type
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /equipments/status/{equipment_id}:
-    put:
+  /equipment/{equipment_id}/status:
+    patch:
       tags: [Equipment]
       summary: Change equipment active status
       parameters:
@@ -596,9 +615,10 @@ paths:
           description: Equipment not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /equipments/types:
+  /equipment/types:
     get:
       tags: [Types]
       summary: Get all equipment types
@@ -614,31 +634,6 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/TypeOfEquipment'
-    
-    post:
-      tags: [Types]
-      summary: Create new equipment type
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateTypeRequest'
-      responses:
-        '201':
-          description: Equipment type created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  type:
-                    $ref: '#/components/schemas/TypeOfEquipment'
-        '409':
-          description: Equipment type already exists
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   # ==================== BOOKINGS ====================
   /bookings:
@@ -678,24 +673,28 @@ paths:
                   booking:
                     $ref: '#/components/schemas/Booking'
         '400':
-          description: Invalid data (e.g., end before start)
+          description: Invalid data
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: User or equipment not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Equipment already booked for the specified time period
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: EQUIPMENT_TAKEN
                   message: equipment is already booked for this time period
+                timestamp: "2024-01-01T12:00:00Z"
 
   /bookings/by-user:
     get:
@@ -719,7 +718,8 @@ paths:
           description: User not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /bookings/by-equipment:
     get:
@@ -743,31 +743,43 @@ paths:
           description: Equipment not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /bookings/{id}:
     delete:
       tags: [Bookings]
-      summary: Cancel booking (if status is Wait) or reject approved booking (removes from DB)
+      summary: Cancel booking (removes from DB)
       parameters:
         - $ref: '#/components/parameters/BookingIdPath'
       responses:
         '204':
-          description: Booking cancelled/rejected and removed from DB
+          description: Booking cancelled and removed
         '404':
           description: Booking not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     
-    put:
+    patch:
       tags: [Bookings]
       summary: Accept booking request (changes status from Wait to Wait Time for Booking)
       parameters:
         - $ref: '#/components/parameters/BookingIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [Wait Time for Booking]
       responses:
         '200':
-          description: Booking approved (waiting for pickup)
+          description: Booking approved
           content:
             application/json:
               schema:
@@ -779,15 +791,22 @@ paths:
           description: Booking not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Booking not in Wait status
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: BOOKING_NOT_WAIT_STATUS
+                  message: booking is not in Wait status
+                timestamp: "2024-01-01T12:00:00Z"
 
   /bookings/{id}/pickup:
-    put:
+    patch:
       tags: [Bookings]
       summary: Mark equipment as picked up (changes status to Active)
       parameters:
@@ -806,12 +825,19 @@ paths:
           description: Booking not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '409':
           description: Booking not in Wait Time for Booking status
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: BOOKING_NOT_WAIT_TIME_STATUS
+                  message: booking is not in Wait Time for Booking status
+                timestamp: "2024-01-01T12:00:00Z"
 
   /bookings/check-availability:
     post:
@@ -843,24 +869,27 @@ paths:
           description: Equipment not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '400':
-          description: Invalid data (e.g., end before start)
+          description: Invalid data
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /bookings/return/{id}:
-    put:
+  /bookings/{id}/return:
+    patch:
       tags: [Bookings]
       summary: Return equipment (completes booking and removes it from DB)
       parameters:
         - $ref: '#/components/parameters/BookingIdPath'
       responses:
         '204':
-          description: Equipment returned and booking removed from DB
+          description: Equipment returned and booking removed
         '404':
           description: Booking not found
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

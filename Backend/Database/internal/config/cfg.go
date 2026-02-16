@@ -1,9 +1,11 @@
 package config
 
 import (
-	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 )
 
@@ -25,20 +27,43 @@ func (o *OauthConfig) ToOauth() oauth2.Config {
 	}
 }
 
-func NewHernyaOauthConfig() (*OauthConfig, error) {
+func LoadEnv() {
+	currentDir, _ := os.Getwd()
+	fmt.Printf("📍 Текущая рабочая директория: %s", currentDir)
+
+	// Проверяем, существует ли .env в этой директории
+	envPath := filepath.Join(currentDir, ".env")
+	if _, err := os.Stat(envPath); os.IsNotExist(err) {
+		fmt.Printf("❌ .env не найден по пути: %s", envPath)
+	} else {
+		fmt.Printf("✅ .env найден по пути: %s", envPath)
+	}
+
+	// Загружаем .env
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("⚠️ Ошибка загрузки .env: %v", err)
+	}
+}
+
+func NewHernyaOauthConfig() *OauthConfig {
+	LoadEnv()
 	clienId := os.Getenv("CLIENT_ID")
 	if clienId == "" {
-		return nil, errors.New("Error to check client id from .env file")
+		fmt.Print("wwwww")
+		return nil
 	}
 
 	clienSecret := os.Getenv("CLIENT_SECRET")
 	if clienSecret == "" {
-		return nil, errors.New("Error to check client secret from .env file")
+		fmt.Print("wwwwwsssss")
+		return nil
 	}
 
 	redirectURL := os.Getenv("REDIRECT_URL")
 	if redirectURL == "" {
-		return nil, errors.New("Error to check redirect url from .env file")
+		fmt.Print("sssss")
+		return nil
 	}
 
 	return &OauthConfig{
@@ -46,14 +71,14 @@ func NewHernyaOauthConfig() (*OauthConfig, error) {
 		ClientSecret: clienSecret,
 		RedirectURL:  redirectURL,
 		Scopes: []string{
-			"birthday",
-			"email",
-			"info",
-			"avatar",
+			"login:birthday",
+			"login:email",
+			"login:info",
+			"login:avatar",
 		},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  "https://oauth.yandex.ru/authorize",
 			TokenURL: "https://oauth.yandex.ru/token",
 		},
-	}, nil
+	}
 }

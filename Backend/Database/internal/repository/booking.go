@@ -4,6 +4,7 @@ import (
 	"database/internal/entity"
 	"database/internal/usecase"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -158,20 +159,25 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 	)`, EquipmentId, End, Start).Scan(&using)
 
 	if err != nil {
+		print("first errror")
 		return entity.Booking{}, err
 	}
 
 	if using {
+		print("second errror")
 		return entity.Booking{}, usecase.ErrThisExists("booking", "time")
 	}
 
 	id, err := uuid.NewV4()
 
 	if err != nil {
+		print("third errror")
 		return entity.Booking{}, err
 	}
 
 	book := entity.Booking{}
+
+	var UserIdFromDB string
 
 	err = b.db.QueryRow(`INSERT INTO proICTIS_booking 
 	(id, user_id,equipment_id,book_start,book_end,status )
@@ -180,7 +186,7 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 		id, UserId, EquipmentId, Start, End, "Waiting answer",
 	).Scan(
 		&book.ID,
-		&book.UserId,
+		&UserIdFromDB,
 		&book.EquipmentId,
 		&book.BookStart,
 		&book.BookEnd,
@@ -188,8 +194,17 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 	)
 
 	if err != nil {
+		print("fourth errror")
 		return entity.Booking{}, err
 	}
+
+	user_id, err := uuid.FromString(UserIdFromDB)
+	if err != nil {
+		print("fifth errror")
+		return entity.Booking{}, err
+	}
+
+	book.UserId = user_id
 
 	return book, nil
 }
@@ -212,6 +227,7 @@ func (b *bookingRepo) EditStatusBooking(BookingId uuid.UUID, status string) (ent
 	)
 
 	if err != nil {
+		fmt.Println("<<<<", err)
 		return entity.Booking{}, err
 	}
 

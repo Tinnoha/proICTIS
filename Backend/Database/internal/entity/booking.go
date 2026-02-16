@@ -8,8 +8,8 @@ import (
 
 type Booking struct {
 	ID          uuid.UUID
-	UserId      int
-	EquipmentId int
+	UserId      uuid.UUID
+	EquipmentId uuid.UUID
 	BookStart   time.Time
 	BookEnd     time.Time
 	Status      string

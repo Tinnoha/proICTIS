@@ -71,9 +71,9 @@ func (uc *EquipmentUsecase) GetTypes() ([]entity.TypeOfEquipment, error) {
 	return uc.EquipmentRepo.GetTypes()
 }
 
-func (uc *EquipmentUsecase) Add(Equipment []entity.Equipment) ([]entity.Equipment, error) {
+func (uc *EquipmentUsecase) Add(Equipment entity.Equipments) ([]entity.Equipment, error) {
 	rez := []entity.Equipment{}
-	for _, vr := range Equipment {
+	for _, vr := range Equipment.Tovars {
 		id, err := uuid.NewV4()
 
 		if err != nil {

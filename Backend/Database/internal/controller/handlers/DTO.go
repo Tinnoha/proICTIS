@@ -4,28 +4,59 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/gofrs/uuid"
 )
 
 type EmailDTO struct {
 	Email string `json:"email"`
 }
 
+type AdminsDTO struct {
+	FirstAdmin  uuid.UUID `json:"first_admin"`
+	SecondAdmin uuid.UUID `json:"second_admin"`
+}
+
+type BoolDTO struct {
+	Active bool `json:"active"`
+}
+
+type BookDTO struct {
+	UserId     uuid.UUID `json:"user_id"`
+	EnviromtId uuid.UUID `json:"enviromt_id"`
+	Start      time.Time `json:"start"`
+	End        time.Time `json:"end"`
+}
+
+type StatusDTO struct {
+	Status string `json:"status"`
+}
+
+type YandexUser struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"default_email"`
+	Avatar    string `json:"default_avatar_id"`
+}
+
 type errDTO struct {
-	err  error     `json:"Error"`
-	time time.Time `json:"Time"`
+	Err  string    `json:"Error"`
+	Time time.Time `json:"Time"`
 }
 
 func HttpError(w http.ResponseWriter, err error, status int) {
 	errdto := errDTO{
-		err:  err,
-		time: time.Now(),
+		Err:  err.Error(),
+		Time: time.Now(),
 	}
 
 	b, err := json.MarshalIndent(errdto, "", "    ")
 
 	if err != nil {
-		panic(err)
+		panic("LOl" + err.Error())
 	}
 
-	http.Error(w, string(b), status)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write(b)
 }

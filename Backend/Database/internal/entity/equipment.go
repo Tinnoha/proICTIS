@@ -12,6 +12,10 @@ type Equipment struct {
 	IsActive        bool      `json:"is_active"`
 }
 
+type Equipments struct {
+	Tovars []Equipment `json:"tovars"`
+}
+
 type TypeOfEquipment struct {
 	Id   uuid.UUID
 	Name string

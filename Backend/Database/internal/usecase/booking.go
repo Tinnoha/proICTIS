@@ -4,6 +4,7 @@ import (
 	"database/internal/entity"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -78,15 +79,19 @@ func (uc *BookingUseCase) Book(UserId uuid.UUID, EquipmentId uuid.UUID, start ti
 	booking, err := uc.BookingRepo.Book(UserId, EquipmentId, start, end)
 
 	if err != nil {
+		print("ppp")
 		if errors.Is(err, sql.ErrNoRows) {
+			print("vamos")
 			return entity.Booking{}, ErrNotFound
 		} else if errors.Is(err, ErrThisExist) {
-			return entity.Booking{}, ErrThisExists("equipment", EquipmentId.String())
+			print("lol")
+			return entity.Booking{}, ErrThisExists("booking", EquipmentId.String())
 		}
 		return entity.Booking{}, ErrInntenal(err)
 	}
 
-	if booking.Status != "Wait" {
+	if booking.Status != "Waiting answer" {
+		print(21)
 		return entity.Booking{}, ErrInntenal(errors.New("No good value from Book"))
 	}
 
@@ -94,18 +99,23 @@ func (uc *BookingUseCase) Book(UserId uuid.UUID, EquipmentId uuid.UUID, start ti
 }
 
 func (uc *BookingUseCase) EditStatusBooking(BookingId uuid.UUID, status string) (entity.Booking, error) {
-	if status == "Cancle" || status == "Returned" {
+	if status == "Cancel" || status == "Returned" {
+		fmt.Println("messi")
 		err := uc.BookingRepo.DeleteBooking(BookingId)
 
 		if err != nil {
+			fmt.Println("Ronaldo")
 			return entity.Booking{}, ErrInntenal(err)
 		}
+		return entity.Booking{}, nil
 	}
 
 	arenda, err := uc.BookingRepo.EditStatusBooking(BookingId, status)
 
 	if err != nil {
+		fmt.Println("Neymar")
 		if errors.Is(err, sql.ErrNoRows) {
+			fmt.Println("Saul")
 			return entity.Booking{}, ErrNotFound
 		}
 		return entity.Booking{}, ErrInntenal(err)

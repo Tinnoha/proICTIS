@@ -1,11 +1,22 @@
 package handlers
 
-import "net/http"
+import (
+	"database/internal/usecase"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
 
-type bookingHandlers struct{}
+	"github.com/gofrs/uuid"
+	"github.com/gorilla/mux"
+)
 
-func NewBookingHandlers() *bookingHandlers {
-	return &bookingHandlers{}
+type BookingHandlers struct {
+	bookingUsecase usecase.BookingUseCase
+}
+
+func NewBookingHandlers(bookingUsecase usecase.BookingUseCase) *BookingHandlers {
+	return &BookingHandlers{bookingUsecase: bookingUsecase}
 }
 
 /*
@@ -22,8 +33,23 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) GetAllBooking(w http.ResponseWriter, r *http.Request) {
+func (h *BookingHandlers) GetAllBooking(w http.ResponseWriter, r *http.Request) {
+	rents, err := h.bookingUsecase.GetAllBooks()
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
 
+	b, err := json.MarshalIndent(rents, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	if _, err = w.Write(b); err != nil {
+		fmt.Println("Error to write answer")
+	}
 }
 
 /*
@@ -40,8 +66,38 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) GetBookingByUserId(w http.ResponseWriter, r *http.Request) {
+func (h *BookingHandlers) GetBookingByUserId(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
+	if id == "" {
+		HttpError(w, errors.New("No query params !"), http.StatusBadRequest)
+		return
+	}
+
+	uuid, err := uuid.FromString(id)
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	rents, err := h.bookingUsecase.GetBooksByUserId(uuid)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	b, err := json.MarshalIndent(rents, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	if _, err = w.Write(b); err != nil {
+		fmt.Println("Error to write answer")
+	}
 }
 
 /*
@@ -58,8 +114,38 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) GetBookingByEquipmentId(w http.ResponseWriter, r *http.Request) {
+func (h *BookingHandlers) GetBookingByEquipmentId(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
+	if id == "" {
+		HttpError(w, errors.New("No query params !"), http.StatusBadRequest)
+		return
+	}
+
+	uuid, err := uuid.FromString(id)
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	rents, err := h.bookingUsecase.GetBooksByEquipmentId(uuid)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	b, err := json.MarshalIndent(rents, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	if _, err = w.Write(b); err != nil {
+		fmt.Println("Error to write answer")
+	}
 }
 
 /*
@@ -76,8 +162,33 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) CreateBooking(w http.ResponseWriter, r *http.Request) {
+func (h *BookingHandlers) CreateBooking(w http.ResponseWriter, r *http.Request) {
+	bok := BookDTO{}
+	err := json.NewDecoder(r.Body).Decode(&bok)
 
+	if err != nil {
+		print(1)
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	booking, err := h.bookingUsecase.Book(bok.UserId, bok.EnviromtId, bok.Start, bok.End)
+	if err != nil {
+		print(2)
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	b, err := json.MarshalIndent(booking, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	if _, err = w.Write(b); err != nil {
+		fmt.Println("Error to write answer")
+	}
 }
 
 /*
@@ -94,8 +205,50 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) AcceptOrCancelBooking(w http.ResponseWriter, r *http.Request) {
+func (h *BookingHandlers) AcceptOrCancelBooking(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
+	if id == "" {
+		fmt.Println("Wpw1")
+		HttpError(w, errors.New("No query params !"), http.StatusBadRequest)
+		return
+	}
+
+	uuid, err := uuid.FromString(id)
+	if err != nil {
+		fmt.Println("Wpww2")
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	status := StatusDTO{}
+	err = json.NewDecoder(r.Body).Decode(&status)
+
+	if err != nil {
+		fmt.Println("Wpwwe3")
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	res, err := h.bookingUsecase.EditStatusBooking(uuid, status.Status)
+
+	if err != nil {
+		fmt.Println("Wpwwe65")
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	b, err := json.MarshalIndent(res, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	if _, err = w.Write(b); err != nil {
+		fmt.Println("Error to write answer")
+	}
 }
 
 /*
@@ -112,6 +265,24 @@ failed:
   - response body: JSON with error + time
 */
 
-func (h *bookingHandlers) ReturnEquipment(w http.ResponseWriter, r *http.Request) {
+func (h *BookingHandlers) ReturnEquipment(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
+	if id == "" {
+		HttpError(w, errors.New("No query params !"), http.StatusBadRequest)
+		return
+	}
+
+	uuid, err := uuid.FromString(id)
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = h.bookingUsecase.DeleteBooking(uuid)
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
 }

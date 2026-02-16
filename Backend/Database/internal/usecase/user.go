@@ -64,6 +64,8 @@ func (uc *UserUseCase) CreateUser(vasy []entity.User) ([]entity.User, error) {
 			return []entity.User{}, ErrInntenal(err)
 		}
 
+		annya.Role = "student"
+
 		vasya, err := uc.UserRepo.CreateUser(annya)
 
 		if err != nil {
