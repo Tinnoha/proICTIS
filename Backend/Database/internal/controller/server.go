@@ -41,6 +41,7 @@ func (s *HTTPServer) Run() {
 	router.Path("/User/admin").Methods("PATCH").HandlerFunc(s.userHandler.MakeAdmin)
 	router.Path("/User/SuperAdmin").Methods("PATCH").HandlerFunc(s.userHandler.MakeSuperAdmin)
 	router.Path("/User/{id}").Methods("GET").HandlerFunc(s.userHandler.GetUserById)
+	router.Path("/User").Methods("GET").HandlerFunc(s.userHandler.GetAll)
 	//WORK
 
 	router.Path("/Equipment").Methods("GET").HandlerFunc(s.equipmentHandler.GetAllEquipment)

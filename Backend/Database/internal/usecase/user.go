@@ -10,6 +10,7 @@ import (
 )
 
 type UserRepository interface {
+	GetAll() ([]entity.User, error)
 	GetById(id uuid.UUID) (entity.User, error)
 	GetByEmail(email string) (entity.User, error)
 	CreateUser(entity.User) (entity.User, error)
@@ -27,6 +28,19 @@ func NewUserUseCase(
 	return &UserUseCase{
 		UserRepo: userRepo,
 	}
+}
+
+func (uc *UserUseCase) GetAll() ([]entity.User, error) {
+	vasya, err := uc.UserRepo.GetAll()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []entity.User{}, ErrNotFound
+		} else {
+			return []entity.User{}, ErrInntenal(err)
+		}
+	}
+
+	return vasya, nil
 }
 
 func (uc *UserUseCase) GetById(id uuid.UUID) (entity.User, error) {

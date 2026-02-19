@@ -32,6 +32,33 @@ func NewAuthHandlers(cfg *oauth2.Config, userUseCase usecase.UserUseCase) *AuthH
 	return &AuthHandlers{CFG: cfg, userUseCase: userUseCase}
 }
 
+func (h *UserHandlers) GetAll(w http.ResponseWriter, r *http.Request) {
+	user, err := h.userUseCase.GetAll()
+
+	if err != nil {
+		if errors.As(err, &usecase.ErrNotFound) {
+			HttpError(w, err, http.StatusNotFound)
+			return
+		} else {
+			HttpError(w, err, http.StatusInternalServerError)
+			return
+		}
+	}
+
+	b, err := json.MarshalIndent(user, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(b); err != nil {
+		fmt.Println("Error to write answer to http: ", err)
+	}
+
+}
+
 /*
 pattern: /user/{id}
 method:  GET

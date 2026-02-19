@@ -39,6 +39,42 @@ func NewUserRepo(db sqlx.DB) *userRepo {
 	}
 }
 
+func (u *userRepo) GetAll() ([]entity.User, error) {
+	rows, err := u.db.Query(`SELECT id, first_name, second_name, email, avatar_url, role, token_provider FROM proICTIS_user`)
+	if err != nil {
+		return []entity.User{}, err
+	}
+
+	defer rows.Close()
+
+	res := []entity.User{}
+	for rows.Next() {
+		vasya := entity.User{}
+
+		err := rows.Scan(
+			&vasya.Id,
+			&vasya.FirstName,
+			&vasya.SecondName,
+			&vasya.Email,
+			&vasya.AvatarURL,
+			&vasya.Role,
+			&vasya.TokenProvider,
+		)
+
+		if err != nil {
+			return []entity.User{}, err
+		}
+
+		res = append(res, vasya)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []entity.User{}, err
+	}
+
+	return res, nil
+}
+
 func (u *userRepo) GetById(id uuid.UUID) (entity.User, error) {
 	vasya := entity.User{}
 	err := u.db.QueryRow(`Select id, first_name, second_name, email, avatar_url,role, token_provider 
