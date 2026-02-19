@@ -327,7 +327,28 @@ paths:
                   code: EMAIL_EXISTS
                   message: email already exists
                 timestamp: "2024-01-01T12:00:00Z"
-  
+  get:  
+    tags: [Users]
+    summary: Get all users
+    responses:
+      '200':
+        description: List of all users
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                users:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/User'
+      '500':
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+
   /users/{id}:
     get:
       tags: [Users]
