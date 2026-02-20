@@ -12,7 +12,11 @@ type EquipmentRepository interface {
 	GetAll() ([]entity.Equipment, error)
 	GetByType(TypeOfEquipment string) ([]entity.Equipment, error)
 	GetById(id uuid.UUID) (entity.Equipment, error)
-	GetTypes() ([]entity.TypeOfEquipment, error)
+
+	GetTypes() ([]entity.TypeOfEquipment, error) // ---
+	//AddTypes([]entity.TypeOfEquipment) ([]entity.TypeOfEquipment, error) // ---------
+	//EditType(id uuid.UUID) (entity.TypeOfEquipment, error)               // ---------
+	//DeleteType(id uuid.UUID) (entity.TypeOfEquipment, error)             // ---------
 
 	Add(equipment entity.Equipment) (entity.Equipment, error)
 

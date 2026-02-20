@@ -6,7 +6,13 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 )
+
+type Baza struct {
+	post  *sqlx.DB
+	redis *redis.Client
+}
 
 func NewDatabase() *sqlx.DB {
 	host := os.Getenv("DB_HOST")

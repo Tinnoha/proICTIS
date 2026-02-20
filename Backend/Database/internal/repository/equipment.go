@@ -1,28 +1,46 @@
 package repository
 
 import (
+	"context"
 	"database/internal/entity"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 )
 
 type equipmentRepo struct {
-	db sqlx.DB
+	db Baza
 }
 
-func NewУquipmentRepo(db sqlx.DB) *equipmentRepo {
+func NewУquipmentRepo(postr *sqlx.DB, redis *redis.Client) *equipmentRepo {
+	baza := Baza{post: postr, redis: redis}
 	return &equipmentRepo{
-		db: db,
+		db: baza,
 	}
 }
 
 func (e *equipmentRepo) GetAll() ([]entity.Equipment, error) {
-	rows, err := e.db.Query(`SELECT 
+
+	b, err := e.db.redis.Get(context.Background(), "Equipment").Result()
+	var equipmen []entity.Equipment
+	if err == nil {
+		if err := json.Unmarshal([]byte(b), &equipmen); err == nil {
+			return equipmen, nil
+		}
+	}
+
+	if err == nil {
+		return equipmen, nil
+	}
+
+	rows, err := e.db.post.Query(`SELECT 
 		proICTIS_equipment.id,
 		proICTIS_equipment.name,
 		proICTIS_equipment.description,
@@ -67,12 +85,22 @@ func (e *equipmentRepo) GetAll() ([]entity.Equipment, error) {
 		return nil, err
 	}
 
+	redisData, err := json.Marshal(equipments)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err := e.db.redis.Set(context.Background(), "Equipment", redisData, time.Minute).Err(); err != nil {
+		fmt.Println("Error to save redis data", err)
+	}
+
 	return equipments, nil
 
 }
 
 func (e *equipmentRepo) GetByType(TypeOfEquipment string) ([]entity.Equipment, error) {
-	rows, err := e.db.Query(`SELECT 
+	rows, err := e.db.post.Query(`SELECT 
 		proICTIS_equipment.id,
 		proICTIS_equipment.name,
 		proICTIS_equipment.description,
@@ -129,7 +157,7 @@ func (e *equipmentRepo) GetByType(TypeOfEquipment string) ([]entity.Equipment, e
 func (e *equipmentRepo) GetById(id uuid.UUID) (entity.Equipment, error) {
 	equipment := entity.Equipment{}
 
-	err := e.db.QueryRow(`SELECT 
+	err := e.db.post.QueryRow(`SELECT 
 		proICTIS_equipment.id,
 		proICTIS_equipment.name,
 		proICTIS_equipment.description,
@@ -158,7 +186,7 @@ func (e *equipmentRepo) GetById(id uuid.UUID) (entity.Equipment, error) {
 }
 
 func (e *equipmentRepo) GetTypes() ([]entity.TypeOfEquipment, error) {
-	rows, err := e.db.Query(`SELECT 
+	rows, err := e.db.post.Query(`SELECT 
 		id,
 		name
 		FROM proICTIS_type_of_equipment
@@ -212,14 +240,14 @@ func (e *equipmentRepo) Add(equipment entity.Equipment) (entity.Equipment, error
 		return entity.Equipment{}, err
 	}
 
-	err = e.db.QueryRow(`INSERT INTO proICTIS_type_of_equipment 
+	err = e.db.post.QueryRow(`INSERT INTO proICTIS_type_of_equipment 
 	(id, name) values ($1, $2)
 	ON CONFLICT(name) DO NOTHING
 	RETURNING id`, id, equipment.TypeOfEquipment).Scan(&id)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			err = e.db.QueryRow(`SELECT id from proICTIS_type_of_equipment where name = $1`, equipment.TypeOfEquipment).Scan(&id)
+			err = e.db.post.QueryRow(`SELECT id from proICTIS_type_of_equipment where name = $1`, equipment.TypeOfEquipment).Scan(&id)
 
 			if err != nil {
 				return entity.Equipment{}, err
@@ -229,7 +257,7 @@ func (e *equipmentRepo) Add(equipment entity.Equipment) (entity.Equipment, error
 		}
 	}
 
-	_, err = e.db.Exec(`INSERT INTO proICTIS_equipment (id,name,description,photo_url,auditory,is_active,type_id) values($1,$2,$3,$4,$5,$6,$7)`,
+	_, err = e.db.post.Exec(`INSERT INTO proICTIS_equipment (id,name,description,photo_url,auditory,is_active,type_id) values($1,$2,$3,$4,$5,$6,$7)`,
 		equipment.Id,
 		equipment.Name,
 		equipment.Description,
@@ -274,14 +302,14 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 			return entity.Equipment{}, err
 		}
 
-		err = e.db.QueryRow(`INSERT INTO proICTIS_type_of_equipment 
+		err = e.db.post.QueryRow(`INSERT INTO proICTIS_type_of_equipment 
 		(id, name) values ($1, $2)
 		ON CONFLICT(name) DO NOTHING
 		RETURNING id`, id, equipment.TypeOfEquipment).Scan(&id)
 
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				err = e.db.QueryRow(`SELECT id from proICTIS_type_of_equipment where name = $1`, equipment.TypeOfEquipment).Scan(&id)
+				err = e.db.post.QueryRow(`SELECT id from proICTIS_type_of_equipment where name = $1`, equipment.TypeOfEquipment).Scan(&id)
 
 				if err != nil {
 					return entity.Equipment{}, err
@@ -311,7 +339,7 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 	editedEquipment := entity.Equipment{}
 	args = append(args, ID)
 
-	rez, err := e.db.Exec(pat, args...)
+	rez, err := e.db.post.Exec(pat, args...)
 
 	if err != nil {
 		return entity.Equipment{}, err
@@ -327,7 +355,7 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 		return entity.Equipment{}, sql.ErrNoRows
 	}
 
-	err = e.db.QueryRow(`select 
+	err = e.db.post.QueryRow(`select 
 	e.id,
 	e.name,
 	e.description,
@@ -353,7 +381,7 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 }
 
 func (e *equipmentRepo) SetActive(id uuid.UUID, active bool) error {
-	rez, err := e.db.Exec(`update proICTIS_equipment set is_active = $1 where id = $2`, active, id)
+	rez, err := e.db.post.Exec(`update proICTIS_equipment set is_active = $1 where id = $2`, active, id)
 	if err != nil {
 		return err
 	}
@@ -371,7 +399,7 @@ func (e *equipmentRepo) SetActive(id uuid.UUID, active bool) error {
 }
 
 func (e *equipmentRepo) Delete(id uuid.UUID) error {
-	rez, err := e.db.Exec(`delete from proICTIS_equipment where id = $1`, id)
+	rez, err := e.db.post.Exec(`delete from proICTIS_equipment where id = $1`, id)
 	if err != nil {
 		return err
 	}

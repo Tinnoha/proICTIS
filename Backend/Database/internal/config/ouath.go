@@ -71,7 +71,6 @@ func NewHernyaOauthConfig() *OauthConfig {
 		ClientSecret: clienSecret,
 		RedirectURL:  redirectURL,
 		Scopes: []string{
-			"login:birthday",
 			"login:email",
 			"login:info",
 			"login:avatar",
