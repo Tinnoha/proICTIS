@@ -270,6 +270,12 @@ func (e *equipmentRepo) Add(equipment entity.Equipment) (entity.Equipment, error
 		return entity.Equipment{}, err
 	}
 
+	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+
+	if err != nil {
+		return entity.Equipment{}, err
+	}
+
 	return equipment, nil
 }
 
