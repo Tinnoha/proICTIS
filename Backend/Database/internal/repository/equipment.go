@@ -224,6 +224,45 @@ func (e *equipmentRepo) GetTypes() ([]entity.TypeOfEquipment, error) {
 
 }
 
+func (e *equipmentRepo) AddType(typeOne entity.TypeOfEquipment) (entity.TypeOfEquipment, error) {
+	res := entity.TypeOfEquipment{Name: typeOne.Name}
+
+	TypeId, err := uuid.NewV4()
+
+	if err != nil {
+		return entity.TypeOfEquipment{}, err
+	}
+
+	err = e.db.post.QueryRow(`INSER INTO proICTIS_type_of_equipment
+		(id, name) values ($1, $2)
+		ON CONFLICT (name) DO NOTHING
+		RETURNING id`, TypeId, typeOne.Name).Scan(&res.Id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			err = e.db.post.QueryRow(`SELECT id from proictis_type_of_equipment where name = $1`, typeOne.Name).Scan(&res.Id)
+
+			if err != nil {
+				return entity.TypeOfEquipment{}, err
+			}
+		} else {
+			return entity.TypeOfEquipment{}, err
+		}
+	}
+
+	return res, nil
+}
+
+func (e *equipmentRepo) EditType(OneType entity.TypeOfEquipment) (entity.TypeOfEquipment, error) {
+	e.db.post.Exec(`UPDATE proICTIS_type_od_equipment
+					SET name = $1
+					WHERE ID = $2`,
+		OneType.Name, OneType.Id)
+
+}
+
+func (e *equipmentRepo) DeleteType(id uuid.UUID) (entity.TypeOfEquipment, error) {}
+
 func (e *equipmentRepo) Add(equipment entity.Equipment) (entity.Equipment, error) {
 	equipmentId, err := uuid.NewV4()
 
