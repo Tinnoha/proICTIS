@@ -98,7 +98,17 @@ func (uc *BookingUseCase) Book(UserId uuid.UUID, EquipmentId uuid.UUID, start ti
 	return booking, nil
 }
 
-func (uc *BookingUseCase) EditStatusBooking(BookingId uuid.UUID, status string) (entity.Booking, error) {
+func (uc *BookingUseCase) EditStatusBooking(AdminId uuid.UUID, BookingId uuid.UUID, status string) (entity.Booking, error) {
+	admin, err := uc.UserRepo.IsAdmin(AdminId)
+	if err != nil {
+		return entity.Booking{}, err
+	}
+
+	if !admin {
+		fmt.Println(AdminId, "Try to fatatl our service!")
+		return entity.Booking{}, errors.New("You are not a admin ! ! ! ! ! !")
+	}
+
 	if status == "Cancel" || status == "Returned" {
 		fmt.Println("messi")
 		err := uc.BookingRepo.DeleteBooking(BookingId)
@@ -124,8 +134,18 @@ func (uc *BookingUseCase) EditStatusBooking(BookingId uuid.UUID, status string) 
 	return arenda, nil
 }
 
-func (uc *BookingUseCase) DeleteBooking(BookingId uuid.UUID) error {
-	err := uc.BookingRepo.DeleteBooking(BookingId)
+func (uc *BookingUseCase) DeleteBooking(AdminId, BookingId uuid.UUID) error {
+	admin, err := uc.UserRepo.IsAdmin(AdminId)
+	if err != nil {
+		return err
+	}
+
+	if !admin {
+		fmt.Println(AdminId, "Try to fatatl our service!")
+		return errors.New("You are not a admin ! ! ! ! ! !")
+	}
+
+	err = uc.BookingRepo.DeleteBooking(BookingId)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

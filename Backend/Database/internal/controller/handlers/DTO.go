@@ -9,7 +9,8 @@ import (
 )
 
 type EmailDTO struct {
-	Email string `json:"email"`
+	AdminId uuid.UUID `json:"admin_id"`
+	Email   string    `json:"email"`
 }
 
 type AdminsDTO struct {
@@ -18,7 +19,8 @@ type AdminsDTO struct {
 }
 
 type BoolDTO struct {
-	Active bool `json:"active"`
+	AdminId uuid.UUID `json:"admin_id"`
+	Active  bool      `json:"active"`
 }
 
 type BookDTO struct {
@@ -29,7 +31,8 @@ type BookDTO struct {
 }
 
 type StatusDTO struct {
-	Status string `json:"status"`
+	AdminId uuid.UUID `json:"admin_id"`
+	Status  string    `json:"status"`
 }
 
 type YandexUser struct {

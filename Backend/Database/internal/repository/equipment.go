@@ -254,14 +254,57 @@ func (e *equipmentRepo) AddType(typeOne entity.TypeOfEquipment) (entity.TypeOfEq
 }
 
 func (e *equipmentRepo) EditType(OneType entity.TypeOfEquipment) (entity.TypeOfEquipment, error) {
-	e.db.post.Exec(`UPDATE proICTIS_type_od_equipment
+	res, err := e.db.post.Exec(`UPDATE proICTIS_type_od_equipment
 					SET name = $1
 					WHERE ID = $2`,
 		OneType.Name, OneType.Id)
 
+	if err != nil {
+		return entity.TypeOfEquipment{}, err
+	}
+
+	count, err := res.RowsAffected()
+
+	if err != nil {
+		return entity.TypeOfEquipment{}, err
+	}
+
+	if count == 0 {
+		return entity.TypeOfEquipment{}, sql.ErrNoRows
+	}
+
+	edited := entity.TypeOfEquipment{}
+	err = e.db.post.QueryRow(`SELECT id, name from proictis_type_of_equipment where id = $1`, OneType.Id).Scan(
+		&edited.Id,
+		&edited.Name,
+	)
+
+	if err != nil {
+		return entity.TypeOfEquipment{}, err
+	}
+
+	return edited, nil
 }
 
-func (e *equipmentRepo) DeleteType(id uuid.UUID) (entity.TypeOfEquipment, error) {}
+func (e *equipmentRepo) DeleteType(id uuid.UUID) error {
+	res, err := e.db.post.Exec(`Delete from proictis_equipment where id = $1`, id)
+
+	if err != nil {
+		return err
+	}
+
+	count, err := res.RowsAffected()
+
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
 
 func (e *equipmentRepo) Add(equipment entity.Equipment) (entity.Equipment, error) {
 	equipmentId, err := uuid.NewV4()

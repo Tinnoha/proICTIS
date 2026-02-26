@@ -13,7 +13,8 @@ type Equipment struct {
 }
 
 type Equipments struct {
-	Tovars []Equipment `json:"tovars"`
+	AdminId uuid.UUID   `json:"admin_id"`
+	Tovars  []Equipment `json:"tovars"`
 }
 
 type TypeOfEquipment struct {

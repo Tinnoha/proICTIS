@@ -4,6 +4,7 @@ import (
 	"database/internal/entity"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -16,6 +17,9 @@ type UserRepository interface {
 	CreateUser(entity.User) (entity.User, error)
 	MakeAdmin(id uuid.UUID) (entity.User, error)
 	MakeSuperAdmin(id uuid.UUID) (entity.User, error)
+
+	IsAdmin(id uuid.UUID) (bool, error)
+	IsSuperAdmin(id uuid.UUID) (bool, error)
 }
 
 type UserUseCase struct {
@@ -56,7 +60,16 @@ func (uc *UserUseCase) GetById(id uuid.UUID) (entity.User, error) {
 	return vasya, nil
 }
 
-func (uc *UserUseCase) GetByEmail(email string) (entity.User, error) {
+func (uc *UserUseCase) GetByEmail(AdminId uuid.UUID, email string) (entity.User, error) {
+	admin, err := uc.UserRepo.IsAdmin(AdminId)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	if !admin {
+		fmt.Println(AdminId, "Try to fatatl our service!")
+		return entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
+	}
 	vasya, err := uc.UserRepo.GetByEmail(email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -97,7 +110,16 @@ func (uc *UserUseCase) CreateUser(vasy []entity.User) ([]entity.User, error) {
 	return rezult, nil
 }
 
-func (uc *UserUseCase) MakeAdmin(id uuid.UUID) (entity.User, error) {
+func (uc *UserUseCase) MakeAdmin(AdminId, id uuid.UUID) (entity.User, error) {
+	admin, err := uc.UserRepo.IsSuperAdmin(AdminId)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	if !admin {
+		fmt.Println(AdminId, "Try to fatatl our service!")
+		return entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
+	}
 
 	vasya, err := uc.UserRepo.MakeAdmin(id)
 
@@ -111,7 +133,16 @@ func (uc *UserUseCase) MakeAdmin(id uuid.UUID) (entity.User, error) {
 	return vasya, nil
 }
 
-func (uc *UserUseCase) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
+func (uc *UserUseCase) MakeSuperAdmin(AdminId, id uuid.UUID) (entity.User, error) {
+	admin, err := uc.UserRepo.IsSuperAdmin(AdminId)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	if !admin {
+		fmt.Println(AdminId, "Try to fatatl our service!")
+		return entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
+	}
 
 	vasya, err := uc.UserRepo.MakeSuperAdmin(id)
 

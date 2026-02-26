@@ -1,55 +1,17 @@
+```yaml
 openapi: 3.0.3
 info:
-  title: Equipment Booking System API
-  version: "1.0.0"
+  title: Equipment Booking System API (реальная реализация)
+  version: 1.0.0
 
 tags:
+  - name: Auth
   - name: Users
   - name: Equipment
   - name: Bookings
-  - name: Types
 
 components:
   parameters:
-    UserIdQuery:
-      name: user_id
-      in: query
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: User identifier
-    EquipmentIdQuery:
-      name: equipment_id
-      in: query
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: Equipment identifier
-    EquipmentTypeQuery:
-      name: type
-      in: query
-      required: true
-      schema:
-        type: string
-      description: Type of equipment (e.g., VR, 3D printer, etc.)
-    BookingIdPath:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: Booking identifier
-    EquipmentIdPath:
-      name: equipment_id
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-      description: Equipment identifier
     UserIdPath:
       name: id
       in: path
@@ -57,8 +19,34 @@ components:
       schema:
         type: string
         format: uuid
-      description: User identifier
-    
+    EquipmentIdPath:
+      name: EquipmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EquipmentTypePath:
+      name: type
+      in: path
+      required: true
+      schema:
+        type: string
+    BookingIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserIdPathAlt:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
   schemas:
     ErrorResponse:
       type: object
@@ -70,23 +58,13 @@ components:
           properties:
             code:
               type: string
-              enum:
-                - NOT_FOUND
-                - INTERNAL_ERROR
-                - ALREADY_EXISTS
-                - WRONG_DATA
-                - EQUIPMENT_NOT_ACTIVE
-                - EQUIPMENT_TAKEN
-                - USER_NOT_FOUND
-                - EMAIL_EXISTS
-                - BOOKING_NOT_WAIT_STATUS
-                - BOOKING_NOT_WAIT_TIME_STATUS
+              enum: [NOT_FOUND, INTERNAL_ERROR, ALREADY_EXISTS, WRONG_DATA]
             message:
               type: string
         timestamp:
           type: string
           format: date-time
-    
+
     User:
       type: object
       required: [id, first_name, second_name, email, role]
@@ -107,10 +85,9 @@ components:
         role:
           type: string
           enum: [student, admin, super_admin]
-        token_provider:
+        tokenProvider:
           type: integer
-          description: Used for registration via Yandex API
-    
+
     Equipment:
       type: object
       required: [id, name, type, auditory, is_active]
@@ -128,24 +105,11 @@ components:
           nullable: true
         type:
           type: string
-          description: Type of equipment (e.g., VR, 3D printer, etc.)
         auditory:
           type: string
-          description: Location where equipment is stored
         is_active:
           type: boolean
-    
-    TypeOfEquipment:
-      type: object
-      required: [id, name]
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-          description: Type name (e.g., VR, 3D printer, etc.)
-    
+
     Booking:
       type: object
       required: [id, user_id, equipment_id, book_start, book_end, status]
@@ -167,102 +131,92 @@ components:
           format: date-time
         status:
           type: string
-          enum: [Wait, Wait Time for Booking, Active]
-          description: |
-            Wait - booking request created (pending approval)
-            Wait Time for Booking - approved, waiting to be picked up
-            Active - equipment picked up, in use
-    
-    CreateBookingRequest:
+          enum: [Waiting answer, Active, Cancel, Returned]
+
+    # Запросы
+    EmailRequest:
       type: object
-      required: [user_id, equipment_id, book_start, book_end]
+      required: [admin_id, email]
+      properties:
+        admin_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+
+    AdminPromotionRequest:
+      type: object
+      required: [first_admin, second_admin]
+      properties:
+        first_admin:
+          type: string
+          format: uuid
+          description: ID администратора, выполняющего действие (должен быть super_admin)
+        second_admin:
+          type: string
+          format: uuid
+          description: ID пользователя, которого повышают
+
+    EquipmentCreateRequest:
+      type: object
+      required: [admin_id, tovars]
+      properties:
+        admin_id:
+          type: string
+          format: uuid
+        tovars:
+          type: array
+          items:
+            type: object
+            required: [name, type, auditory]
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              photo_url:
+                type: string
+              type:
+                type: string
+              auditory:
+                type: string
+              is_active:
+                type: boolean
+                default: true
+
+    EquipmentUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        photo_url:
+          type: string
+        type:
+          type: string
+        auditory:
+          type: string
+
+    EquipmentStatusRequest:
+      type: object
+      required: [admin_id, active]
+      properties:
+        admin_id:
+          type: string
+          format: uuid
+        active:
+          type: boolean
+
+    BookingCreateRequest:
+      type: object
+      required: [user_id, enviromt_id, start, end]
       properties:
         user_id:
           type: string
           format: uuid
-        equipment_id:
-          type: string
-          format: uuid
-        book_start:
-          type: string
-          format: date-time
-          description: Start of equipment rental
-        book_end:
-          type: string
-          format: date-time
-          description: End of equipment rental
-    
-    CreateUserRequest:
-      type: object
-      required: [first_name, second_name, email]
-      properties:
-        first_name:
-          type: string
-        second_name:
-          type: string
-        email:
-          type: string
-          format: email
-        avatar_url:
-          type: string
-          nullable: true
-        token_provider:
-          type: integer
-          default: 0
-          description: Used for registration via Yandex API
-    
-    CreateEquipmentRequest:
-      type: object
-      required: [name, type, auditory]
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        photo_url:
-          type: string
-          nullable: true
-        type:
-          type: string
-          description: Type of equipment (e.g., VR, 3D printer, etc.)
-        auditory:
-          type: string
-          description: Location where equipment is stored
-        is_active:
-          type: boolean
-          default: true
-    
-    UpdateEquipmentRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        photo_url:
-          type: string
-          nullable: true
-        type:
-          type: string
-          description: Type of equipment (e.g., VR, 3D printer, etc.)
-        auditory:
-          type: string
-          description: Location where equipment is stored
-    
-    SetActiveRequest:
-      type: object
-      required: [is_active]
-      properties:
-        is_active:
-          type: boolean
-    
-    CheckAvailabilityRequest:
-      type: object
-      required: [equipment_id, start, end]
-      properties:
-        equipment_id:
+        enviromt_id:
           type: string
           format: uuid
         start:
@@ -271,199 +225,31 @@ components:
         end:
           type: string
           format: date-time
-    
-    EmailRequest:
+
+    BookingStatusUpdateRequest:
       type: object
-      required: [email]
+      required: [admin_id, status]
       properties:
-        email:
-          type: string
-          format: email
-    
-    AdminRequest:
-      type: object
-      required: [user_id]
-      properties:
-        user_id:
+        admin_id:
           type: string
           format: uuid
+        status:
+          type: string
+          enum: [Waiting answer, Active, Cancel, Returned]
 
 paths:
-  # ==================== USERS ====================
-  /users:
-    post:
-      tags: [Users]
-      summary: Create a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateUserRequest'
-      responses:
-        '201':
-          description: User created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        '400':
-          description: Invalid data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Email already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: EMAIL_EXISTS
-                  message: email already exists
-                timestamp: "2024-01-01T12:00:00Z"
-  get:  
-    tags: [Users]
-    summary: Get all users
-    responses:
-      '200':
-        description: List of all users
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                users:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/User'
-      '500':
-        description: Internal server error
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ErrorResponse'
-
-  /users/{id}:
+  # ========== Auth ==========
+  /Regist:
     get:
-      tags: [Users]
-      summary: Get user by ID
-      parameters:
-        - $ref: '#/components/parameters/UserIdPath'
-      responses:
-        '200':
-          description: User information
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  
-  /users/email:
-    post:
-      tags: [Users]
-      summary: Get user by email
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EmailRequest'
-      responses:
-        '200':
-          description: User information
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  
-  /users/admin:
-    patch:
-      tags: [Users]
-      summary: Make user an admin
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminRequest'
-      responses:
-        '200':
-          description: User promoted to admin
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  
-  /users/superadmin:
-    patch:
-      tags: [Users]
-      summary: Make user a super admin
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminRequest'
-      responses:
-        '200':
-          description: User promoted to super admin
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-  
-  /auth/yandex:
-    get:
-      tags: [Users]
+      tags: [Auth]
       summary: Initiate Yandex OAuth login
       responses:
         '307':
           description: Redirect to Yandex OAuth
-  
-  /auth/yandex/callback:
+
+  /callback:
     get:
-      tags: [Users]
+      tags: [Auth]
       summary: Yandex OAuth callback
       responses:
         '307':
@@ -475,14 +261,142 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  # ==================== EQUIPMENT ====================
-  /equipment:
+  # ========== Users ==========
+  /User:
+    get:
+      tags: [Users]
+      summary: Get all users
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /User/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: User info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /User/email:
+    get:
+      tags: [Users]
+      summary: Get user by email (requires admin rights)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request
+        '403':
+          description: Forbidden (not admin)
+        '404':
+          description: User not found
+
+  /User/admin:
+    patch:
+      tags: [Users]
+      summary: Make user an admin (requires super_admin rights)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminPromotionRequest'
+      responses:
+        '200':
+          description: User promoted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid data
+        '403':
+          description: Forbidden
+        '404':
+          description: User not found
+
+  /User/SuperAdmin:
+    patch:
+      tags: [Users]
+      summary: Make user a super admin (requires super_admin rights)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminPromotionRequest'
+      responses:
+        '200':
+          description: User promoted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid data
+        '403':
+          description: Forbidden
+        '404':
+          description: User not found
+
+  # ========== Equipment ==========
+  /Equipment:
     get:
       tags: [Equipment]
       summary: Get all equipment
       responses:
         '200':
-          description: List of all equipment
+          description: List of equipment
           content:
             application/json:
               schema:
@@ -492,16 +406,15 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Equipment'
-    
     post:
       tags: [Equipment]
-      summary: Create new equipment
+      summary: Create new equipment (requires admin rights)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEquipmentRequest'
+              $ref: '#/components/schemas/EquipmentCreateRequest'
       responses:
         '201':
           description: Equipment created
@@ -511,89 +424,23 @@ paths:
                 type: object
                 properties:
                   equipment:
-                    $ref: '#/components/schemas/Equipment'
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Equipment'
         '400':
           description: Invalid data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
 
-  /equipment/{equipment_id}:
-    get:
-      tags: [Equipment]
-      summary: Get equipment by ID
-      parameters:
-        - $ref: '#/components/parameters/EquipmentIdPath'
-      responses:
-        '200':
-          description: Equipment information
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  equipment:
-                    $ref: '#/components/schemas/Equipment'
-        '404':
-          description: Equipment not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    
-    patch:
-      tags: [Equipment]
-      summary: Edit equipment
-      parameters:
-        - $ref: '#/components/parameters/EquipmentIdPath'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateEquipmentRequest'
-      responses:
-        '200':
-          description: Equipment updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  equipment:
-                    $ref: '#/components/schemas/Equipment'
-        '404':
-          description: Equipment not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    
-    delete:
-      tags: [Equipment]
-      summary: Delete equipment
-      parameters:
-        - $ref: '#/components/parameters/EquipmentIdPath'
-      responses:
-        '204':
-          description: Equipment deleted
-        '404':
-          description: Equipment not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /equipment/by-type:
+  /Equipment/type/{type}:
     get:
       tags: [Equipment]
       summary: Get equipment by type
       parameters:
-        - $ref: '#/components/parameters/EquipmentTypeQuery'
+        - $ref: '#/components/parameters/EquipmentTypePath'
       responses:
         '200':
-          description: List of equipment of specified type
+          description: List of equipment of given type
           content:
             application/json:
               schema:
@@ -604,27 +451,22 @@ paths:
                     items:
                       $ref: '#/components/schemas/Equipment'
         '404':
-          description: No equipment found with this type
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: No equipment found
 
-  /equipment/{equipment_id}/status:
-    patch:
+  /Equipment/id/{id}:
+    get:
       tags: [Equipment]
-      summary: Change equipment active status
+      summary: Get equipment by ID
       parameters:
-        - $ref: '#/components/parameters/EquipmentIdPath'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SetActiveRequest'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
-          description: Status updated
+          description: Equipment found
           content:
             application/json:
               schema:
@@ -633,37 +475,84 @@ paths:
                   equipment:
                     $ref: '#/components/schemas/Equipment'
         '404':
-          description: Equipment not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: Not found
 
-  /equipment/types:
-    get:
-      tags: [Types]
-      summary: Get all equipment types
+  /Equipment/{EquipmentId}:
+    patch:
+      tags: [Equipment]
+      summary: Edit equipment (requires admin rights)
+      parameters:
+        - $ref: '#/components/parameters/EquipmentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipmentUpdateRequest'
       responses:
         '200':
-          description: List of equipment types
+          description: Updated equipment
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  types:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TypeOfEquipment'
+                  equipment:
+                    $ref: '#/components/schemas/Equipment'
+        '400':
+          description: Invalid data
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+    delete:
+      tags: [Equipment]
+      summary: Delete equipment (requires admin rights)
+      parameters:
+        - $ref: '#/components/parameters/EquipmentIdPath'
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
 
-  # ==================== BOOKINGS ====================
-  /bookings:
+  /Equipment/status/{EquipmentId}:
+    patch:
+      tags: [Equipment]
+      summary: Change equipment active status (requires admin rights)
+      parameters:
+        - $ref: '#/components/parameters/EquipmentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipmentStatusRequest'
+      responses:
+        '200':
+          description: Status updated (returns updated equipment)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  equipment:
+                    $ref: '#/components/schemas/Equipment'
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+
+  # ========== Bookings ==========
+  /Booking:
     get:
       tags: [Bookings]
       summary: Get all bookings
       responses:
         '200':
-          description: List of all bookings
+          description: List of bookings
           content:
             application/json:
               schema:
@@ -673,19 +562,18 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Booking'
-    
     post:
       tags: [Bookings]
-      summary: Create new booking request (status: Wait)
+      summary: Create a booking request (status = "Waiting answer")
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBookingRequest'
+              $ref: '#/components/schemas/BookingCreateRequest'
       responses:
         '201':
-          description: Booking request created (pending approval)
+          description: Booking created
           content:
             application/json:
               schema:
@@ -694,35 +582,14 @@ paths:
                   booking:
                     $ref: '#/components/schemas/Booking'
         '400':
-          description: Invalid data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: User or equipment not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Equipment already booked for the specified time period
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: EQUIPMENT_TAKEN
-                  message: equipment is already booked for this time period
-                timestamp: "2024-01-01T12:00:00Z"
+          description: Invalid data or equipment already booked for this period
 
-  /bookings/by-user:
+  /Booking/user/{id}:
     get:
       tags: [Bookings]
-      summary: Get user's bookings
+      summary: Get bookings by user ID
       parameters:
-        - $ref: '#/components/parameters/UserIdQuery'
+        - $ref: '#/components/parameters/UserIdPathAlt'
       responses:
         '200':
           description: List of user's bookings
@@ -736,18 +603,14 @@ paths:
                     items:
                       $ref: '#/components/schemas/Booking'
         '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: User not found or no bookings
 
-  /bookings/by-equipment:
+  /Booking/equipment/{id}:
     get:
       tags: [Bookings]
-      summary: Get equipment's bookings
+      summary: Get bookings by equipment ID
       parameters:
-        - $ref: '#/components/parameters/EquipmentIdQuery'
+        - $ref: '#/components/parameters/UserIdPathAlt'  # тот же параметр id, но для equipment
       responses:
         '200':
           description: List of equipment's bookings
@@ -761,156 +624,49 @@ paths:
                     items:
                       $ref: '#/components/schemas/Booking'
         '404':
-          description: Equipment not found
+          description: Equipment not found or no bookings
+
+  /Booking/{id}:
+    put:
+      tags: [Bookings]
+      summary: Update booking status (or cancel/return). Admin rights required for status change.
+      parameters:
+        - $ref: '#/components/parameters/BookingIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingStatusUpdateRequest'
+      responses:
+        '200':
+          description: Status updated (if status is not Cancel/Returned, returns updated booking)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-  /bookings/{id}:
-    delete:
-      tags: [Bookings]
-      summary: Cancel booking (removes from DB)
-      parameters:
-        - $ref: '#/components/parameters/BookingIdPath'
-      responses:
+                type: object
+                properties:
+                  booking:
+                    $ref: '#/components/schemas/Booking'
         '204':
-          description: Booking cancelled and removed
-        '404':
-          description: Booking not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    
-    patch:
-      tags: [Bookings]
-      summary: Accept booking request (changes status from Wait to Wait Time for Booking)
-      parameters:
-        - $ref: '#/components/parameters/BookingIdPath'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                status:
-                  type: string
-                  enum: [Wait Time for Booking]
-      responses:
-        '200':
-          description: Booking approved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  booking:
-                    $ref: '#/components/schemas/Booking'
-        '404':
-          description: Booking not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Booking not in Wait status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: BOOKING_NOT_WAIT_STATUS
-                  message: booking is not in Wait status
-                timestamp: "2024-01-01T12:00:00Z"
-
-  /bookings/{id}/pickup:
-    patch:
-      tags: [Bookings]
-      summary: Mark equipment as picked up (changes status to Active)
-      parameters:
-        - $ref: '#/components/parameters/BookingIdPath'
-      responses:
-        '200':
-          description: Equipment marked as picked up
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  booking:
-                    $ref: '#/components/schemas/Booking'
-        '404':
-          description: Booking not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Booking not in Wait Time for Booking status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error:
-                  code: BOOKING_NOT_WAIT_TIME_STATUS
-                  message: booking is not in Wait Time for Booking status
-                timestamp: "2024-01-01T12:00:00Z"
-
-  /bookings/check-availability:
-    post:
-      tags: [Bookings]
-      summary: Check equipment availability for a time period
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CheckAvailabilityRequest'
-      responses:
-        '200':
-          description: Availability check result
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [available, equipment_id]
-                properties:
-                  available:
-                    type: boolean
-                  equipment_id:
-                    type: string
-                    format: uuid
-                  message:
-                    type: string
-        '404':
-          description: Equipment not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          description: Booking cancelled or returned (deleted, no content)
         '400':
           description: Invalid data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (admin rights required)
+        '404':
+          description: Booking not found
 
-  /bookings/{id}/return:
-    patch:
+  /Booking/return/{id}:
+    put:
       tags: [Bookings]
-      summary: Return equipment (completes booking and removes it from DB)
+      summary: Return equipment (deletes booking). Admin rights required.
       parameters:
         - $ref: '#/components/parameters/BookingIdPath'
       responses:
         '204':
-          description: Equipment returned and booking removed
+          description: Booking deleted (equipment returned)
+        '403':
+          description: Forbidden
         '404':
           description: Booking not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'

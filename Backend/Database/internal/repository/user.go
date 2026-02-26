@@ -182,3 +182,45 @@ func (u *userRepo) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
 
 	return user, nil
 }
+
+func (u *userRepo) IsAdmin(id uuid.UUID) (bool, error) {
+	row, err := u.db.Query(`SELECT role FROM proICTIS_use where id = $1`, id)
+
+	if err != nil {
+		return false, err
+	}
+
+	role := ""
+	err = row.Scan(&role)
+
+	if err != nil {
+		return false, err
+	}
+
+	if role == "admin" {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func (u *userRepo) IsSuperAdmin(id uuid.UUID) (bool, error) {
+	row, err := u.db.Query(`SELECT role FROM proICTIS_use where id = $1`, id)
+
+	if err != nil {
+		return false, err
+	}
+
+	role := ""
+	err = row.Scan(&role)
+
+	if err != nil {
+		return false, err
+	}
+
+	if role == "Super_Admin" {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
