@@ -290,7 +290,7 @@ components:
 
 paths:
   # ==================== USERS ====================
-  /users:
+  /user:
     post:
       tags: [Users]
       summary: Create a new user
@@ -349,7 +349,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ErrorResponse'
 
-  /users/{id}:
+  /user/{id}:
     get:
       tags: [Users]
       summary: Get user by ID
@@ -372,7 +372,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   
-  /users/email:
+  /user/email:
     post:
       tags: [Users]
       summary: Get user by email
@@ -399,7 +399,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   
-  /users/admin:
+  /user/admin:
     patch:
       tags: [Users]
       summary: Make user an admin
@@ -426,7 +426,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   
-  /users/superadmin:
+  /user/superadmin:
     patch:
       tags: [Users]
       summary: Make user a super admin
@@ -453,7 +453,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   
-  /auth/yandex:
+  /Regist:
     get:
       tags: [Users]
       summary: Initiate Yandex OAuth login
