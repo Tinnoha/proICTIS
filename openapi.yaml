@@ -1,4 +1,3 @@
-```yaml
 openapi: 3.0.3
 info:
   title: Equipment Booking System API (реальная реализация)
