@@ -1,12 +1,32 @@
 package handlers
 
 import (
+	"database/internal/entity"
 	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/gofrs/uuid"
 )
+
+type AdminDTO struct {
+	AdminId uuid.UUID `json:"admin_id"`
+}
+
+type TypesDTO struct {
+	AdminId uuid.UUID                `json:"admin_id"`
+	Types   []entity.TypeOfEquipment `json:"types"`
+}
+
+type TypeDTO struct {
+	AdminId uuid.UUID              `json:"admin_id"`
+	Type    entity.TypeOfEquipment `json:"type"`
+}
+
+type EquipmentEdit struct {
+	AdminId   uuid.UUID        `json:"admin_id"`
+	Equipment entity.Equipment `json:"Equipment"`
+}
 
 type EmailDTO struct {
 	AdminId uuid.UUID `json:"admin_id"`

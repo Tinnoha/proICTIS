@@ -164,7 +164,7 @@ func (uc *EquipmentUsecase) Add(Equipment entity.Equipments) ([]entity.Equipment
 	}
 
 	if !admin {
-		fmt.Println(AdminId, "Try to fatatl our service!")
+		fmt.Println(Equipment.AdminId, "Try to fatatl our service!")
 		return []entity.Equipment{}, errors.New("You are not a admin ! ! ! ! ! !")
 	}
 	rez := []entity.Equipment{}

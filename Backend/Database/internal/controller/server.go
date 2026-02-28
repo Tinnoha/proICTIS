@@ -53,10 +53,10 @@ func (s *HTTPServer) Run() {
 	router.Path("/Equipment/{EquipmentId}").Methods("DELETE").HandlerFunc(s.equipmentHandler.DeleteEquipment)
 	// WORK
 
-	router.Path("/Types").Methods("GET")
-	router.Path("/Types").Methods("POST")
-	router.Path("/Types/{id}").Methods("PATCH")
-	router.Path("/Types/{id}").Methods("DELETE")
+	router.Path("/Types").Methods("GET").HandlerFunc(s.equipmentHandler.GetTypes)
+	router.Path("/Types").Methods("POST").HandlerFunc(s.equipmentHandler.AddType)
+	router.Path("/Types/{id}").Methods("PATCH").HandlerFunc(s.equipmentHandler.EditType)
+	router.Path("/Types/{id}").Methods("DELETE").HandlerFunc(s.equipmentHandler.DeleteType)
 
 	router.Path("/Booking").Methods("GET").HandlerFunc(s.bookHandler.GetAllBooking)
 	router.Path("/Booking/user/{id}").Methods("GET").HandlerFunc(s.bookHandler.GetAllBooking)

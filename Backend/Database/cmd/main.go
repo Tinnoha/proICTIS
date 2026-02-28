@@ -39,7 +39,7 @@ func main() {
 	fmt.Println("We create repos")
 
 	bookingUseCase := usecase.NewBooknigUseCase(userRepo, bookingRepo, equipmentRepo)
-	equipmentUseCase := usecase.NewEquipmentUsecase(bookingRepo, equipmentRepo)
+	equipmentUseCase := usecase.NewEquipmentUsecase(bookingRepo, equipmentRepo, userRepo)
 	userUseCase := usecase.NewUserUseCase(userRepo)
 	cfg := config.NewHernyaOauthConfig()
 	if cfg == nil {

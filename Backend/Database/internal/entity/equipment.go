@@ -19,5 +19,5 @@ type Equipments struct {
 
 type TypeOfEquipment struct {
 	Id   uuid.UUID
-	Name string
+	Name string `json:"name"`
 }

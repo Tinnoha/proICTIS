@@ -231,7 +231,7 @@ func (h *BookingHandlers) AcceptOrCancelBooking(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	res, err := h.bookingUsecase.EditStatusBooking(uuid, status.Status)
+	res, err := h.bookingUsecase.EditStatusBooking(status.AdminId, uuid, status.Status)
 
 	if err != nil {
 		fmt.Println("Wpwwe65")
@@ -280,7 +280,16 @@ func (h *BookingHandlers) ReturnEquipment(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = h.bookingUsecase.DeleteBooking(uuid)
+	admin := AdminDTO{}
+
+	err = json.NewDecoder(r.Body).Decode(&admin)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = h.bookingUsecase.DeleteBooking(admin.AdminId, uuid)
 	if err != nil {
 		HttpError(w, err, http.StatusBadRequest)
 		return

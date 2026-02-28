@@ -7,6 +7,7 @@ tags:
   - name: Auth
   - name: Users
   - name: Equipment
+  - name: Types
   - name: Bookings
 
 components:
@@ -18,6 +19,7 @@ components:
       schema:
         type: string
         format: uuid
+      description: User identifier
     EquipmentIdPath:
       name: EquipmentId
       in: path
@@ -25,12 +27,14 @@ components:
       schema:
         type: string
         format: uuid
+      description: Equipment identifier
     EquipmentTypePath:
       name: type
       in: path
       required: true
       schema:
         type: string
+      description: Type of equipment (e.g., VR, 3D printer)
     BookingIdPath:
       name: id
       in: path
@@ -38,109 +42,122 @@ components:
       schema:
         type: string
         format: uuid
-    UserIdPathAlt:
+      description: Booking identifier
+    TypeIdPath:
       name: id
       in: path
       required: true
       schema:
         type: string
         format: uuid
+      description: Type of equipment identifier
 
   schemas:
     ErrorResponse:
       type: object
-      required: [error, timestamp]
+      required: [Error, Time]
       properties:
-        error:
-          type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              enum: [NOT_FOUND, INTERNAL_ERROR, ALREADY_EXISTS, WRONG_DATA]
-            message:
-              type: string
-        timestamp:
+        Error:
+          type: string
+        Time:
           type: string
           format: date-time
 
     User:
       type: object
-      required: [id, first_name, second_name, email, role]
+      required: [Id, FirstName, SecondName, Email, Role]
       properties:
-        id:
+        Id:
           type: string
           format: uuid
-        first_name:
+        FirstName:
           type: string
-        second_name:
+        SecondName:
           type: string
-        email:
+        Email:
           type: string
           format: email
-        avatar_url:
+        AvatarURL:
           type: string
           nullable: true
-        role:
+        Role:
           type: string
           enum: [student, admin, super_admin]
-        tokenProvider:
+        TokenProvider:
           type: integer
 
     Equipment:
       type: object
-      required: [id, name, type, auditory, is_active]
+      required: [Id, Name, TypeOfEquipment, Auditory, IsActive]
       properties:
-        id:
+        Id:
           type: string
           format: uuid
-        name:
+        Name:
           type: string
-        description:
-          type: string
-          nullable: true
-        photo_url:
+        Description:
           type: string
           nullable: true
-        type:
+        PhotoURL:
           type: string
-        auditory:
+          nullable: true
+        TypeOfEquipment:
           type: string
-        is_active:
+        Auditory:
+          type: string
+        IsActive:
           type: boolean
+
+    TypeOfEquipment:
+      type: object
+      required: [Id, Name]
+      properties:
+        Id:
+          type: string
+          format: uuid
+        Name:
+          type: string
 
     Booking:
       type: object
-      required: [id, user_id, equipment_id, book_start, book_end, status]
+      required: [ID, UserId, EquipmentId, BookStart, BookEnd, Status]
       properties:
-        id:
+        ID:
           type: string
           format: uuid
-        user_id:
+        UserId:
           type: string
           format: uuid
-        equipment_id:
+        EquipmentId:
           type: string
           format: uuid
-        book_start:
+        BookStart:
           type: string
           format: date-time
-        book_end:
+        BookEnd:
           type: string
           format: date-time
-        status:
+        Status:
           type: string
           enum: [Waiting answer, Active, Cancel, Returned]
 
-    # Запросы
-    EmailRequest:
+    # Request bodies
+    AdminOnlyRequest:
       type: object
-      required: [admin_id, email]
+      required: [admin_id]
       properties:
         admin_id:
           type: string
           format: uuid
-        email:
+
+    EmailRequest:
+      type: object
+      required: [AdminId, Email]
+      properties:
+        AdminId:
+          type: string
+          format: uuid
+        Email:
           type: string
           format: email
 
@@ -151,11 +168,11 @@ components:
         first_admin:
           type: string
           format: uuid
-          description: ID администратора, выполняющего действие (должен быть super_admin)
+          description: ID of super admin performing the action
         second_admin:
           type: string
           format: uuid
-          description: ID пользователя, которого повышают
+          description: ID of user to promote
 
     EquipmentCreateRequest:
       type: object
@@ -184,19 +201,15 @@ components:
                 type: boolean
                 default: true
 
-    EquipmentUpdateRequest:
+    EquipmentEditRequest:
       type: object
+      required: [admin_id, Equipment]
       properties:
-        name:
+        admin_id:
           type: string
-        description:
-          type: string
-        photo_url:
-          type: string
-        type:
-          type: string
-        auditory:
-          type: string
+          format: uuid
+        Equipment:
+          $ref: '#/components/schemas/Equipment'
 
     EquipmentStatusRequest:
       type: object
@@ -207,6 +220,28 @@ components:
           format: uuid
         active:
           type: boolean
+
+    TypesCreateRequest:
+      type: object
+      required: [admin_id, types]
+      properties:
+        admin_id:
+          type: string
+          format: uuid
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypeOfEquipment'
+
+    TypeUpdateRequest:
+      type: object
+      required: [admin_id, type]
+      properties:
+        admin_id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TypeOfEquipment'
 
     BookingCreateRequest:
       type: object
@@ -235,6 +270,14 @@ components:
         status:
           type: string
           enum: [Waiting answer, Active, Cancel, Returned]
+
+    BookingReturnRequest:
+      type: object
+      required: [admin_id]
+      properties:
+        admin_id:
+          type: string
+          format: uuid
 
 paths:
   # ========== Auth ==========
@@ -271,12 +314,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  users:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/User'
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
         '500':
           description: Internal error
           content:
@@ -292,14 +332,11 @@ paths:
         - $ref: '#/components/parameters/UserIdPath'
       responses:
         '200':
-          description: User info
+          description: User object
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/User'
         '404':
           description: User not found
           content:
@@ -310,7 +347,7 @@ paths:
   /User/email:
     get:
       tags: [Users]
-      summary: Get user by email (requires admin rights)
+      summary: Get user by email (admin only)
       requestBody:
         required: true
         content:
@@ -323,21 +360,30 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/User'
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /User/admin:
     patch:
       tags: [Users]
-      summary: Make user an admin (requires super_admin rights)
+      summary: Make user an admin (requires super admin)
       requestBody:
         required: true
         content:
@@ -350,21 +396,30 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/User'
         '400':
           description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Forbidden
+          description: Forbidden (not super admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /User/SuperAdmin:
     patch:
       tags: [Users]
-      summary: Make user a super admin (requires super_admin rights)
+      summary: Make user a super admin (requires super admin)
       requestBody:
         required: true
         content:
@@ -377,16 +432,25 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/User'
         '400':
           description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Forbidden
+          description: Forbidden (not super admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   # ========== Equipment ==========
   /Equipment:
@@ -399,15 +463,18 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  equipment:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Equipment'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Equipment'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       tags: [Equipment]
-      summary: Create new equipment (requires admin rights)
+      summary: Create new equipment (admin only)
       requestBody:
         required: true
         content:
@@ -420,16 +487,21 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  equipment:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Equipment'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Equipment'
         '400':
           description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Forbidden
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Equipment/type/{type}:
     get:
@@ -443,14 +515,15 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  equipment:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Equipment'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Equipment'
         '404':
           description: No equipment found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Equipment/id/{id}:
     get:
@@ -465,21 +538,22 @@ paths:
             format: uuid
       responses:
         '200':
-          description: Equipment found
+          description: Equipment object
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  equipment:
-                    $ref: '#/components/schemas/Equipment'
+                $ref: '#/components/schemas/Equipment'
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Equipment/{EquipmentId}:
     patch:
       tags: [Equipment]
-      summary: Edit equipment (requires admin rights)
+      summary: Edit equipment (admin only)
       parameters:
         - $ref: '#/components/parameters/EquipmentIdPath'
       requestBody:
@@ -487,40 +561,63 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EquipmentUpdateRequest'
+              $ref: '#/components/schemas/EquipmentEditRequest'
       responses:
         '200':
           description: Updated equipment
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  equipment:
-                    $ref: '#/components/schemas/Equipment'
+                $ref: '#/components/schemas/Equipment'
         '400':
           description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Forbidden
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       tags: [Equipment]
-      summary: Delete equipment (requires admin rights)
+      summary: Delete equipment (admin only)
       parameters:
         - $ref: '#/components/parameters/EquipmentIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminOnlyRequest'
       responses:
         '204':
-          description: Deleted
+          description: Deleted (no content)
         '403':
-          description: Forbidden
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Equipment/status/{EquipmentId}:
     patch:
       tags: [Equipment]
-      summary: Change equipment active status (requires admin rights)
+      summary: Change equipment active status (admin only)
       parameters:
         - $ref: '#/components/parameters/EquipmentIdPath'
       requestBody:
@@ -531,18 +628,138 @@ paths:
               $ref: '#/components/schemas/EquipmentStatusRequest'
       responses:
         '200':
-          description: Status updated (returns updated equipment)
+          description: Status updated
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  equipment:
-                    $ref: '#/components/schemas/Equipment'
+                $ref: '#/components/schemas/Equipment'
         '403':
-          description: Forbidden
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ========== Types ==========
+  /Types:
+    get:
+      tags: [Types]
+      summary: Get all equipment types
+      responses:
+        '200':
+          description: List of types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TypeOfEquipment'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Types]
+      summary: Create new equipment types (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TypesCreateRequest'
+      responses:
+        '201':
+          description: Types created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TypeOfEquipment'
+        '400':
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /Types/{id}:
+    patch:
+      tags: [Types]
+      summary: Update equipment type (admin only)
+      parameters:
+        - $ref: '#/components/parameters/TypeIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TypeUpdateRequest'
+      responses:
+        '200':
+          description: Updated type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypeOfEquipment'
+        '400':
+          description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Types]
+      summary: Delete equipment type (admin only)
+      parameters:
+        - $ref: '#/components/parameters/TypeIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminOnlyRequest'
+      responses:
+        '204':
+          description: Deleted (no content)
+        '403':
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   # ========== Bookings ==========
   /Booking:
@@ -555,15 +772,18 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  bookings:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Booking'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       tags: [Bookings]
-      summary: Create a booking request (status = "Waiting answer")
+      summary: Create a new booking (status = "Waiting answer")
       requestBody:
         required: true
         content:
@@ -576,59 +796,67 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  booking:
-                    $ref: '#/components/schemas/Booking'
+                $ref: '#/components/schemas/Booking'
         '400':
-          description: Invalid data or equipment already booked for this period
+          description: Invalid data or equipment already booked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Booking/user/{id}:
     get:
       tags: [Bookings]
       summary: Get bookings by user ID
       parameters:
-        - $ref: '#/components/parameters/UserIdPathAlt'
+        - $ref: '#/components/parameters/UserIdPath'
       responses:
         '200':
           description: List of user's bookings
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  bookings:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Booking'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
         '404':
           description: User not found or no bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Booking/equipment/{id}:
     get:
       tags: [Bookings]
       summary: Get bookings by equipment ID
       parameters:
-        - $ref: '#/components/parameters/UserIdPathAlt'  # тот же параметр id, но для equipment
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: List of equipment's bookings
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  bookings:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Booking'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
         '404':
           description: Equipment not found or no bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Booking/{id}:
     put:
       tags: [Bookings]
-      summary: Update booking status (or cancel/return). Admin rights required for status change.
+      summary: Update booking status (admin only). Use status "Cancel" to delete.
       parameters:
         - $ref: '#/components/parameters/BookingIdPath'
       requestBody:
@@ -639,33 +867,56 @@ paths:
               $ref: '#/components/schemas/BookingStatusUpdateRequest'
       responses:
         '200':
-          description: Status updated (if status is not Cancel/Returned, returns updated booking)
+          description: Status updated (returns booking if status not Cancel/Returned)
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  booking:
-                    $ref: '#/components/schemas/Booking'
+                $ref: '#/components/schemas/Booking'
         '204':
           description: Booking cancelled or returned (deleted, no content)
         '400':
           description: Invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: Forbidden (admin rights required)
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /Booking/return/{id}:
     put:
       tags: [Bookings]
-      summary: Return equipment (deletes booking). Admin rights required.
+      summary: Return equipment (admin only). Deletes the booking.
       parameters:
         - $ref: '#/components/parameters/BookingIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingReturnRequest'
       responses:
         '204':
           description: Booking deleted (equipment returned)
         '403':
-          description: Forbidden
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

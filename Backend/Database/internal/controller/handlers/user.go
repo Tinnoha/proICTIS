@@ -139,11 +139,11 @@ func (h *UserHandlers) GetUserByEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userUseCase.GetByEmail(emailS.Email)
+	user, err := h.userUseCase.GetByEmail(emailS.AdminId, emailS.Email)
 
 	if err != nil {
 		fmt.Println("Popchung")
-		if errors.As(err, usecase.ErrNotFound) {
+		if errors.As(err, &usecase.ErrNotFound) {
 			HttpError(w, err, http.StatusNotFound)
 			return
 		}
@@ -268,7 +268,7 @@ func (h *UserHandlers) MakeAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	admin, err := h.userUseCase.MakeAdmin(admins.SecondAdmin)
+	admin, err := h.userUseCase.MakeAdmin(admins.FirstAdmin, admins.SecondAdmin)
 
 	if err != nil {
 		if errors.As(err, &usecase.ErrNotFound) {
@@ -319,7 +319,7 @@ func (h *UserHandlers) MakeSuperAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	admin, err := h.userUseCase.MakeSuperAdmin(admins.SecondAdmin)
+	admin, err := h.userUseCase.MakeSuperAdmin(admins.FirstAdmin, admins.SecondAdmin)
 
 	if err != nil {
 		if errors.As(err, &usecase.ErrNotFound) {

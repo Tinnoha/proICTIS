@@ -233,7 +233,7 @@ func (e *equipmentRepo) AddType(typeOne entity.TypeOfEquipment) (entity.TypeOfEq
 		return entity.TypeOfEquipment{}, err
 	}
 
-	err = e.db.post.QueryRow(`INSER INTO proICTIS_type_of_equipment
+	err = e.db.post.QueryRow(`INSERT INTO proICTIS_type_of_equipment
 		(id, name) values ($1, $2)
 		ON CONFLICT (name) DO NOTHING
 		RETURNING id`, TypeId, typeOne.Name).Scan(&res.Id)
@@ -254,7 +254,7 @@ func (e *equipmentRepo) AddType(typeOne entity.TypeOfEquipment) (entity.TypeOfEq
 }
 
 func (e *equipmentRepo) EditType(OneType entity.TypeOfEquipment) (entity.TypeOfEquipment, error) {
-	res, err := e.db.post.Exec(`UPDATE proICTIS_type_od_equipment
+	res, err := e.db.post.Exec(`UPDATE proICTIS_type_of_equipment
 					SET name = $1
 					WHERE ID = $2`,
 		OneType.Name, OneType.Id)
@@ -274,7 +274,7 @@ func (e *equipmentRepo) EditType(OneType entity.TypeOfEquipment) (entity.TypeOfE
 	}
 
 	edited := entity.TypeOfEquipment{}
-	err = e.db.post.QueryRow(`SELECT id, name from proictis_type_of_equipment where id = $1`, OneType.Id).Scan(
+	err = e.db.post.QueryRow(`SELECT id, name from proICTIS_type_of_equipment where id = $1`, OneType.Id).Scan(
 		&edited.Id,
 		&edited.Name,
 	)
@@ -287,7 +287,7 @@ func (e *equipmentRepo) EditType(OneType entity.TypeOfEquipment) (entity.TypeOfE
 }
 
 func (e *equipmentRepo) DeleteType(id uuid.UUID) error {
-	res, err := e.db.post.Exec(`Delete from proictis_equipment where id = $1`, id)
+	res, err := e.db.post.Exec(`Delete from proICTIS_type_of_equipment where id = $1`, id)
 
 	if err != nil {
 		return err

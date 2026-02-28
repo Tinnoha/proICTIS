@@ -176,7 +176,7 @@ func (h *EquipmentHandlers) CreateEquipment(w http.ResponseWriter, r *http.Reque
 
 	result, err := h.equipmentUseCase.Add(equipments)
 	if err != nil {
-		if errors.As(err, usecase.ErrThisExist) {
+		if errors.As(err, &usecase.ErrThisExist) {
 			HttpError(w, err, http.StatusBadRequest)
 			return
 		} else {
@@ -220,7 +220,7 @@ func (h *EquipmentHandlers) EditEquipment(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	editor := entity.Equipment{}
+	editor := EquipmentEdit{}
 	err := json.NewDecoder(r.Body).Decode(&editor)
 
 	if err != nil {
@@ -235,7 +235,7 @@ func (h *EquipmentHandlers) EditEquipment(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	result, err := h.equipmentUseCase.Edit(uuid, editor)
+	result, err := h.equipmentUseCase.Edit(editor.AdminId, uuid, editor.Equipment)
 
 	if err != nil {
 		if errors.As(err, usecase.ErrNotFound) {
@@ -295,7 +295,7 @@ func (h *EquipmentHandlers) EditStatusEquipment(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = h.equipmentUseCase.SetActive(uuid, active.Active)
+	err = h.equipmentUseCase.SetActive(active.AdminId, uuid, active.Active)
 	if err != nil {
 		if errors.As(err, usecase.ErrNotFound) {
 			HttpError(w, err, http.StatusNotFound)
@@ -335,10 +335,18 @@ func (h *EquipmentHandlers) DeleteEquipment(w http.ResponseWriter, r *http.Reque
 		HttpError(w, err, http.StatusBadRequest)
 		return
 	}
+	admin := AdminDTO{}
 
-	err = h.equipmentUseCase.Delete(uuid)
+	err = json.NewDecoder(r.Body).Decode(&admin)
+
 	if err != nil {
-		if errors.As(err, usecase.ErrNotFound) {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = h.equipmentUseCase.Delete(admin.AdminId, uuid)
+	if err != nil {
+		if errors.As(err, &usecase.ErrNotFound) {
 			HttpError(w, err, http.StatusNotFound)
 			return
 		} else {
@@ -346,4 +354,137 @@ func (h *EquipmentHandlers) DeleteEquipment(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}
+}
+
+func (h *EquipmentHandlers) GetTypes(w http.ResponseWriter, r *http.Request) {
+	types, err := h.equipmentUseCase.GetTypes()
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	b, err := json.MarshalIndent(types, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(b); err != nil {
+		fmt.Println("We cannot to give answer")
+	}
+}
+
+func (h *EquipmentHandlers) AddType(w http.ResponseWriter, r *http.Request) {
+	types := TypesDTO{}
+
+	err := json.NewDecoder(r.Body).Decode(&types)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	result, err := h.equipmentUseCase.AddTypes(types.AdminId, types.Types)
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	b, err := json.MarshalIndent(result, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	if _, err := w.Write(b); err != nil {
+		fmt.Println("We cannot to give answer")
+	}
+}
+
+func (h *EquipmentHandlers) EditType(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	id, ok := vars["id"]
+
+	if !ok {
+		HttpError(w, errors.New("WITHOUT ID"), http.StatusBadRequest)
+		return
+	}
+
+	uuid, err := uuid.FromString(id)
+
+	if err != nil {
+		HttpError(w, errors.New("id is not uuid"), http.StatusBadRequest)
+		return
+	}
+
+	admin := TypeDTO{}
+	err = json.NewDecoder(r.Body).Decode(&admin)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	admin.Type.Id = uuid
+
+	ttype, err := h.equipmentUseCase.EditType(admin.AdminId, admin.Type)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	b, err := json.MarshalIndent(ttype, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	if _, err := w.Write(b); err != nil {
+		fmt.Println("We cannot to give answer")
+	}
+}
+
+func (h *EquipmentHandlers) DeleteType(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	id, ok := vars["id"]
+
+	if !ok {
+		HttpError(w, errors.New("WITHOUT ID"), http.StatusBadRequest)
+		return
+	}
+
+	uuid, err := uuid.FromString(id)
+
+	if err != nil {
+		HttpError(w, errors.New("id is not uuid"), http.StatusBadRequest)
+		return
+	}
+
+	admin := AdminDTO{}
+	err = json.NewDecoder(r.Body).Decode(&admin)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = h.equipmentUseCase.DeleteType(admin.AdminId, uuid)
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

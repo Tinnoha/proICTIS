@@ -136,7 +136,7 @@ func (u *userRepo) CreateUser(user entity.User) (entity.User, error) {
 }
 
 func (u *userRepo) MakeAdmin(id uuid.UUID) (entity.User, error) {
-	user := entity.User{}
+	user := entity.User{Id: id}
 
 	err := u.db.QueryRow(
 		`UPDATE PROICTIS_user
@@ -160,7 +160,7 @@ func (u *userRepo) MakeAdmin(id uuid.UUID) (entity.User, error) {
 }
 
 func (u *userRepo) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
-	user := entity.User{}
+	user := entity.User{Id: id}
 
 	err := u.db.QueryRow(
 		`UPDATE PROICTIS_user
@@ -184,20 +184,14 @@ func (u *userRepo) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
 }
 
 func (u *userRepo) IsAdmin(id uuid.UUID) (bool, error) {
-	row, err := u.db.Query(`SELECT role FROM proICTIS_use where id = $1`, id)
-
-	if err != nil {
-		return false, err
-	}
-
 	role := ""
-	err = row.Scan(&role)
+	err := u.db.QueryRow(`SELECT role FROM proICTIS_user where id = $1`, id).Scan(&role)
 
 	if err != nil {
 		return false, err
 	}
 
-	if role == "admin" {
+	if role == "admin" || role == "Super_Admin" {
 		return true, nil
 	} else {
 		return false, nil
@@ -205,14 +199,8 @@ func (u *userRepo) IsAdmin(id uuid.UUID) (bool, error) {
 }
 
 func (u *userRepo) IsSuperAdmin(id uuid.UUID) (bool, error) {
-	row, err := u.db.Query(`SELECT role FROM proICTIS_use where id = $1`, id)
-
-	if err != nil {
-		return false, err
-	}
-
 	role := ""
-	err = row.Scan(&role)
+	err := u.db.QueryRow(`SELECT role FROM proICTIS_user where id = $1`, id).Scan(&role)
 
 	if err != nil {
 		return false, err
