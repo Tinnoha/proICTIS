@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
@@ -222,6 +223,13 @@ func (a *AuthHandlers) RegistCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println("Avatar:", yaUser.Avatar, "First", yaUser.FirstName, "email", yaUser.Email, "last", yaUser.LastName)
+
+	email := strings.ToLower(strings.TrimSpace(yaUser.Email))
+	sfedu := strings.HasSuffix(email, "@sfedu.ru")
+	if !sfedu {
+		HttpError(w, fmt.Errorf("Try another account. Use email with @sfedu.ru"), http.StatusBadRequest)
+		return
+	}
 
 	user := []entity.User{}
 	yauser := entity.User{
