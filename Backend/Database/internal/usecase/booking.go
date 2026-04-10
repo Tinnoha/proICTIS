@@ -156,3 +156,4 @@ func (uc *BookingUseCase) DeleteBooking(AdminId, BookingId uuid.UUID) error {
 
 	return nil
 }
+

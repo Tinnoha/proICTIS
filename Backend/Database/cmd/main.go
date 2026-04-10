@@ -34,7 +34,7 @@ func main() {
 	fmt.Println("We create db")
 
 	bookingRepo := repository.NewBookingRepo(*db)
-	equipmentRepo := repository.NewУquipmentRepo(db, red)
+	equipmentRepo := repository.NewEquipmentRepo(db, red)
 	userRepo := repository.NewUserRepo(*db)
 	fmt.Println("We create repos")
 

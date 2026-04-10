@@ -35,6 +35,7 @@ func (s *HTTPServer) Run() {
 
 	router.Path("/Regist").HandlerFunc(s.authHandler.Regist)
 	router.Path("/callback").HandlerFunc(s.authHandler.RegistCallback)
+	router.Path("/check").HandlerFunc(s.userHandler.CheckSfedu)
 	//WORK
 
 	router.Path("/User/email").Methods("GET").HandlerFunc(s.userHandler.GetUserByEmail)
@@ -59,7 +60,7 @@ func (s *HTTPServer) Run() {
 	router.Path("/Types/{id}").Methods("DELETE").HandlerFunc(s.equipmentHandler.DeleteType)
 
 	router.Path("/Booking").Methods("GET").HandlerFunc(s.bookHandler.GetAllBooking)
-	router.Path("/Booking/user/{id}").Methods("GET").HandlerFunc(s.bookHandler.GetAllBooking)
+	router.Path("/Booking/user/{id}").Methods("GET").HandlerFunc(s.bookHandler.GetBookingByUserId)
 	router.Path("/Booking/equipment/{id}").Methods("GET").HandlerFunc(s.bookHandler.GetBookingByEquipmentId)
 	router.Path("/Booking").Methods("POST").HandlerFunc(s.bookHandler.CreateBooking)
 	router.Path("/Booking/{id}").Methods("PUT").HandlerFunc(s.bookHandler.AcceptOrCancelBooking)
