@@ -9,7 +9,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/cookiejar"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/mux"
@@ -92,7 +95,7 @@ func (h *UserHandlers) GetUserById(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userUseCase.GetById(uuid)
 
 	if err != nil {
-		if errors.As(err, usecase.ErrNotFound) {
+		if errors.As(err, &usecase.ErrNotFound) {
 			HttpError(w, err, http.StatusNotFound)
 			return
 		} else {
@@ -348,5 +351,60 @@ func (h *UserHandlers) MakeSuperAdmin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(b); err != nil {
 		fmt.Println("Error to write answer to http: ", err)
+	}
+}
+
+func (h *UserHandlers) CheckSfedu(w http.ResponseWriter, r *http.Request) {
+	var user struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	cookie, _ := cookiejar.New(nil)
+	client := &http.Client{
+		Jar:     cookie,
+		Timeout: 16 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return nil
+		},
+	}
+
+	u, _ := url.Parse(user.Name[:20])
+	cookie.SetCookies(u, []*http.Cookie{
+		{Name: "MoodleSession", Value: user.Id},
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, user.Name, nil)
+	req.Header.Set("User-Agent",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+	req.Header.Set("Accept",
+		"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		HttpError(w, errors.New("Connection error"), http.StatusBadRequest)
+		return
+	}
+	defer resp.Body.Close()
+
+	b, _ := io.ReadAll(resp.Body)
+	responseStr := string(b)
+	if strings.Contains(responseStr, "уже была") {
+		HttpError(w, errors.New("This user is exsist"), http.StatusBadRequest)
+		return
+	}
+	if strings.Contains(responseStr, "Отсутствует обязательный параметр") {
+		HttpError(w, errors.New("Error with data"), http.StatusBadRequest)
+		return
 	}
 }

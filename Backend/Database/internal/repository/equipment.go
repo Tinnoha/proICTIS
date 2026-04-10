@@ -19,7 +19,7 @@ type equipmentRepo struct {
 	db Baza
 }
 
-func NewУquipmentRepo(postr *sqlx.DB, redis *redis.Client) *equipmentRepo {
+func NewEquipmentRepo(postr *sqlx.DB, redis *redis.Client) *equipmentRepo {
 	baza := Baza{post: postr, redis: redis}
 	return &equipmentRepo{
 		db: baza,
@@ -465,6 +465,12 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 		return entity.Equipment{}, err
 	}
 
+	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+
+	if err != nil {
+		return entity.Equipment{}, err
+	}
+
 	return editedEquipment, nil
 }
 
@@ -481,6 +487,12 @@ func (e *equipmentRepo) SetActive(id uuid.UUID, active bool) error {
 
 	if c == 0 {
 		return sql.ErrNoRows
+	}
+
+	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -500,6 +512,12 @@ func (e *equipmentRepo) Delete(id uuid.UUID) error {
 
 	if c == 0 {
 		return sql.ErrNoRows
+	}
+
+	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+
+	if err != nil {
+		return err
 	}
 
 	return nil

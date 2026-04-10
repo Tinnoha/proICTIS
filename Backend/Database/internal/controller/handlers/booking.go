@@ -294,4 +294,5 @@ func (h *BookingHandlers) ReturnEquipment(w http.ResponseWriter, r *http.Request
 		HttpError(w, err, http.StatusBadRequest)
 		return
 	}
+
 }
