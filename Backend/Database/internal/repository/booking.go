@@ -2,7 +2,8 @@ package repository
 
 import (
 	"database/internal/entity"
-	"database/internal/usecase"
+	"errors"
+
 	"database/sql"
 	"fmt"
 	"time"
@@ -164,8 +165,7 @@ func (b *bookingRepo) Book(UserId uuid.UUID, EquipmentId uuid.UUID, Start time.T
 	}
 
 	if using {
-		print("second errror")
-		return entity.Booking{}, usecase.ErrThisExists("booking", "time")
+		return entity.Booking{}, errors.New("booking: time slot already taken")
 	}
 
 	id, err := uuid.NewV4()

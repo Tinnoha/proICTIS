@@ -2,9 +2,11 @@ package controller
 
 import (
 	"database/internal/controller/handlers"
+	"database/internal/controller/middleware"
 	"fmt"
 	"net/http"
 
+	rec "github.com/Mijxmon/Recav"
 	"github.com/gorilla/mux"
 )
 
@@ -35,7 +37,6 @@ func (s *HTTPServer) Run() {
 
 	router.Path("/Regist").HandlerFunc(s.authHandler.Regist)
 	router.Path("/callback").HandlerFunc(s.authHandler.RegistCallback)
-	router.Path("/check").HandlerFunc(s.userHandler.CheckSfedu)
 	//WORK
 
 	router.Path("/User/email").Methods("GET").HandlerFunc(s.userHandler.GetUserByEmail)
@@ -66,6 +67,14 @@ func (s *HTTPServer) Run() {
 	router.Path("/Booking/{id}").Methods("PUT").HandlerFunc(s.bookHandler.AcceptOrCancelBooking)
 	router.Path("/Booking/return/{id}").Methods("PUT").HandlerFunc(s.bookHandler.ReturnEquipment)
 	// WORK
-	http.ListenAndServe(":8080", router)
+
+	router.Path("/api/upload").Methods("POST", "OPTIONS").HandlerFunc(s.equipmentHandler.UploadImage)
+
+	fs := http.FileServer(http.Dir("./uploads"))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
+
+	d := middleware.CorsMiddleware(router)
+	handler := rec.Middleware(d)
+	http.ListenAndServe(":8080", handler)
 	fmt.Println("We finish HTTP SERVER")
 }

@@ -155,3 +155,14 @@ func (uc *UserUseCase) MakeSuperAdmin(AdminId, id uuid.UUID) (entity.User, error
 
 	return vasya, nil
 }
+
+func (uc *UserUseCase) GetByEmailNoAuth(email string) (entity.User, error) {
+	user, err := uc.UserRepo.GetByEmail(email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, ErrNotFound
+		}
+		return entity.User{}, ErrInntenal(err)
+	}
+	return user, nil
+}

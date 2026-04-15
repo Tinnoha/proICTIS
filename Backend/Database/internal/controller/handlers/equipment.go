@@ -14,10 +14,17 @@ import (
 
 type EquipmentHandlers struct {
 	equipmentUseCase usecase.EquipmentUsecase
+	fileUseCase      usecase.FileStorageUsecase
 }
 
-func NewEquipmentHandlers(equipmentUseCase usecase.EquipmentUsecase) *EquipmentHandlers {
-	return &EquipmentHandlers{equipmentUseCase: equipmentUseCase}
+func NewEquipmentHandlers(
+	equipmentUseCase usecase.EquipmentUsecase,
+	fileUsecase usecase.FileStorageUsecase,
+) *EquipmentHandlers {
+	return &EquipmentHandlers{
+		equipmentUseCase: equipmentUseCase,
+		fileUseCase:      fileUsecase,
+	}
 }
 
 /*
@@ -487,4 +494,35 @@ func (h *EquipmentHandlers) DeleteType(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *EquipmentHandlers) UploadImage(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	adminIDStr := r.FormValue("admin_id")
+	adminID, err := uuid.FromString(adminIDStr)
+	if err != nil {
+		HttpError(w, errors.New("invalid admin_id"), http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	url, err := h.fileUseCase.Save(adminID, file, header.Filename)
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	// 6. Отдаём ответ
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(UploadDTO{URL: url})
 }

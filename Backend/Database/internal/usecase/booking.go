@@ -79,19 +79,15 @@ func (uc *BookingUseCase) Book(UserId uuid.UUID, EquipmentId uuid.UUID, start ti
 	booking, err := uc.BookingRepo.Book(UserId, EquipmentId, start, end)
 
 	if err != nil {
-		print("ppp")
 		if errors.Is(err, sql.ErrNoRows) {
-			print("vamos")
 			return entity.Booking{}, ErrNotFound
 		} else if errors.Is(err, ErrThisExist) {
-			print("lol")
 			return entity.Booking{}, ErrThisExists("booking", EquipmentId.String())
 		}
 		return entity.Booking{}, ErrInntenal(err)
 	}
 
 	if booking.Status != "Waiting answer" {
-		print(21)
 		return entity.Booking{}, ErrInntenal(errors.New("No good value from Book"))
 	}
 
@@ -156,4 +152,3 @@ func (uc *BookingUseCase) DeleteBooking(AdminId, BookingId uuid.UUID) error {
 
 	return nil
 }
-

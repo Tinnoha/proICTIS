@@ -8,6 +8,7 @@ import (
 	"database/internal/repository"
 	"database/internal/usecase"
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -36,11 +37,25 @@ func main() {
 	bookingRepo := repository.NewBookingRepo(*db)
 	equipmentRepo := repository.NewEquipmentRepo(db, red)
 	userRepo := repository.NewUserRepo(*db)
+
+	basePath := os.Getenv("STORAGE_PATH")
+	if basePath == "" {
+		basePath = "./uploads"
+	}
+
+	baseURL := os.Getenv("STORAGE_BASE_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080/static"
+	}
+
+	fileLocal := repository.NewLocalStorage(basePath, baseURL)
+
 	fmt.Println("We create repos")
 
 	bookingUseCase := usecase.NewBooknigUseCase(userRepo, bookingRepo, equipmentRepo)
 	equipmentUseCase := usecase.NewEquipmentUsecase(bookingRepo, equipmentRepo, userRepo)
 	userUseCase := usecase.NewUserUseCase(userRepo)
+	FileUsecase := usecase.NewFileStorageUsecase(*fileLocal, userRepo)
 	cfg := config.NewHernyaOauthConfig()
 	if cfg == nil {
 		panic("wow")
@@ -50,7 +65,7 @@ func main() {
 	config := cfg.ToOauth()
 
 	bookingHandler := handlers.NewBookingHandlers(*bookingUseCase)
-	eqiupmentHandler := handlers.NewEquipmentHandlers(*equipmentUseCase)
+	eqiupmentHandler := handlers.NewEquipmentHandlers(*equipmentUseCase, *FileUsecase)
 	userHandler := handlers.NewUserHandlers(*userUseCase)
 	authHandler := handlers.NewAuthHandlers(&config, *userUseCase)
 	fmt.Println("We create handlers")

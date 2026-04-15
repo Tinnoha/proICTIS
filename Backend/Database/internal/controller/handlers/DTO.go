@@ -67,6 +67,10 @@ type errDTO struct {
 	Time time.Time `json:"Time"`
 }
 
+type UploadDTO struct {
+	URL string `json:"url"`
+}
+
 func HttpError(w http.ResponseWriter, err error, status int) {
 	errdto := errDTO{
 		Err:  err.Error(),

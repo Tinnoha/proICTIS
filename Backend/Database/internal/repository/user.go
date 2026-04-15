@@ -191,7 +191,7 @@ func (u *userRepo) IsAdmin(id uuid.UUID) (bool, error) {
 		return false, err
 	}
 
-	if role == "admin" || role == "Super_Admin" {
+	if role == "Admin" || role == "Super_Admin" {
 		return true, nil
 	} else {
 		return false, nil

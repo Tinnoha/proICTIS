@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gofrs/uuid"
@@ -163,18 +164,21 @@ failed:
 */
 
 func (h *BookingHandlers) CreateBooking(w http.ResponseWriter, r *http.Request) {
-	bok := BookDTO{}
-	err := json.NewDecoder(r.Body).Decode(&bok)
-
+	rawBody, err := io.ReadAll(r.Body)
 	if err != nil {
-		print(1)
 		HttpError(w, err, http.StatusBadRequest)
 		return
+	}
+	r.Body.Close()
+
+	var bok BookDTO
+	err = json.Unmarshal(rawBody, &bok)
+	if err != nil {
+		panic(string(rawBody)) //перехватиться если что в мидлвеире, выдаст 500 ошибку
 	}
 
 	booking, err := h.bookingUsecase.Book(bok.UserId, bok.EnviromtId, bok.Start, bok.End)
 	if err != nil {
-		print(2)
 		HttpError(w, err, http.StatusBadRequest)
 		return
 	}
@@ -210,14 +214,12 @@ func (h *BookingHandlers) AcceptOrCancelBooking(w http.ResponseWriter, r *http.R
 	id := vars["id"]
 
 	if id == "" {
-		fmt.Println("Wpw1")
 		HttpError(w, errors.New("No query params !"), http.StatusBadRequest)
 		return
 	}
 
 	uuid, err := uuid.FromString(id)
 	if err != nil {
-		fmt.Println("Wpww2")
 		HttpError(w, err, http.StatusBadRequest)
 		return
 	}
@@ -226,15 +228,23 @@ func (h *BookingHandlers) AcceptOrCancelBooking(w http.ResponseWriter, r *http.R
 	err = json.NewDecoder(r.Body).Decode(&status)
 
 	if err != nil {
-		fmt.Println("Wpwwe3")
 		HttpError(w, err, http.StatusBadRequest)
 		return
+	}
+
+	if status.Status == "Canceled" {
+		err = h.bookingUsecase.DeleteBooking(status.AdminId, uuid)
+
+		if err != nil {
+			HttpError(w, err, http.StatusBadRequest)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 
 	res, err := h.bookingUsecase.EditStatusBooking(status.AdminId, uuid, status.Status)
 
 	if err != nil {
-		fmt.Println("Wpwwe65")
 		HttpError(w, err, http.StatusBadRequest)
 		return
 	}
@@ -290,9 +300,11 @@ func (h *BookingHandlers) ReturnEquipment(w http.ResponseWriter, r *http.Request
 	}
 
 	err = h.bookingUsecase.DeleteBooking(admin.AdminId, uuid)
+
 	if err != nil {
 		HttpError(w, err, http.StatusBadRequest)
 		return
 	}
+	w.WriteHeader(http.StatusNoContent)
 
 }
