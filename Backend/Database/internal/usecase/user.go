@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -20,6 +21,10 @@ type UserRepository interface {
 
 	IsAdmin(id uuid.UUID) (bool, error)
 	IsSuperAdmin(id uuid.UUID) (bool, error)
+
+	CreateToken(userId uuid.UUID, token string, timeExpire time.Time) (string, error)
+	ConnectVK(vk_token uuid.UUID, vkId int) error
+	GetByVkId(VkId int) (entity.User, error)
 }
 
 type UserUseCase struct {
@@ -165,4 +170,35 @@ func (uc *UserUseCase) GetByEmailNoAuth(email string) (entity.User, error) {
 		return entity.User{}, ErrInntenal(err)
 	}
 	return user, nil
+}
+
+func (uc *UserUseCase) VKCreateLink(userId uuid.UUID) (string, error) {
+	token := uuid.Must(uuid.NewV7()).String()
+
+	timeExpire := time.Now().Add(10 * time.Minute)
+
+	str, err := uc.UserRepo.CreateToken(userId, token, timeExpire)
+
+	if err != nil {
+		return "", ErrInntenal(err)
+	}
+
+	return str, nil
+}
+
+func (uc *UserUseCase) VKConnect(VkId int, token uuid.UUID) error {
+	return uc.VKConnect(VkId, token)
+}
+
+func (uc *UserUseCase) GetByVkId(VKId int) (entity.User, error) {
+	vasya, err := uc.UserRepo.GetByVkId(VKId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, ErrNotFound
+		} else {
+			return entity.User{}, ErrInntenal(err)
+		}
+	}
+
+	return vasya, nil
 }

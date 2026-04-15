@@ -2,6 +2,9 @@ package repository
 
 import (
 	"database/internal/entity"
+	"errors"
+	"fmt"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -118,7 +121,16 @@ func (u *userRepo) GetByEmail(email string) (entity.User, error) {
 }
 
 func (u *userRepo) CreateUser(user entity.User) (entity.User, error) {
-	_, err := u.db.Exec(`INSERT INTO proICTIS_user (id, first_name, second_name, email, avatar_url,role, token_provider) VALUES($1,$2,$3,$4,$5,$6,$7)`,
+	_, err := u.db.Exec(`
+	INSERT INTO proICTIS_user 
+	(id,
+	first_name, 
+	second_name, 
+	email, 
+	avatar_url,
+	role, 
+	token_provider) 
+	VALUES($1,$2,$3,$4,$5,$6,$7)`,
 		user.Id,
 		user.FirstName,
 		user.SecondName,
@@ -211,4 +223,93 @@ func (u *userRepo) IsSuperAdmin(id uuid.UUID) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+func (u *userRepo) CreateToken(
+	userId uuid.UUID,
+	token string,
+	timeExpire time.Time,
+) (string, error) {
+	sqlRequest := `
+		UPDATE proICTIS_user 
+		SET vk_token = $2,
+			time_token = $3
+		WHERE id = $1;
+		`
+
+	_, err := u.db.Exec(sqlRequest, userId, token, timeExpire)
+
+	if err != nil {
+		return "", err
+	}
+
+	token = fmt.Sprintf("https://vk.com/write-237660555?ref=%s", token)
+
+	return token, nil
+}
+
+func (u *userRepo) ConnectVK(vk_token uuid.UUID, vkId int) error {
+	sqlRequest := `
+	SELECT time_token
+	FROM proICTIS_user
+	WHERE vk_token = $1
+	`
+
+	row := u.db.QueryRow(sqlRequest, vk_token)
+
+	if row.Err() != nil {
+		return row.Err()
+	}
+
+	tokenTime := time.Time{}
+
+	err := row.Scan(&tokenTime)
+
+	if err != nil {
+		return err
+	}
+
+	if time.Now().After(tokenTime) {
+		return errors.New("time expired, try again")
+	}
+
+	sqlRequest = `
+	UPDATE proICTIS_user
+	SET vk_token = NULL,
+		time_token = NULL,
+		vk_id = $1
+	WHERE vk_token = $2 AND vk_id IS NULL; 
+	`
+
+	pat, err := u.db.Exec(sqlRequest, vkId, vk_token)
+	if err != nil {
+		return err
+	}
+
+	if c, _ := pat.RowsAffected(); c == 0 {
+		return errors.New("user_id is not exists")
+	}
+
+	return nil
+}
+
+func (u *userRepo) GetByVkId(VkId int) (entity.User, error) {
+	vasya := entity.User{}
+	err := u.db.QueryRow(`Select id, first_name, second_name, email, avatar_url,role, token_provider 
+	from proICTIS_user 
+	where vk_id = $1`, VkId).Scan(
+		&vasya.Id,
+		&vasya.FirstName,
+		&vasya.SecondName,
+		&vasya.Email,
+		&vasya.AvatarURL,
+		&vasya.Role,
+		&vasya.TokenProvider,
+	)
+
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	return vasya, nil
 }

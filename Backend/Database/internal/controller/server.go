@@ -39,9 +39,12 @@ func (s *HTTPServer) Run() {
 	router.Path("/callback").HandlerFunc(s.authHandler.RegistCallback)
 	//WORK
 
+	router.Path("/User/vk").Methods("GET").HandlerFunc(s.userHandler.CreateLink)
+	router.Path("/User/vk").Methods("PATCH").HandlerFunc(s.userHandler.ConnectVk)
 	router.Path("/User/email").Methods("GET").HandlerFunc(s.userHandler.GetUserByEmail)
 	router.Path("/User/admin").Methods("PATCH").HandlerFunc(s.userHandler.MakeAdmin)
 	router.Path("/User/SuperAdmin").Methods("PATCH").HandlerFunc(s.userHandler.MakeSuperAdmin)
+	router.Path("/User/by-vk").Methods("GET").HandlerFunc(s.userHandler.GetUserByVkId)
 	router.Path("/User/{id}").Methods("GET").HandlerFunc(s.userHandler.GetUserById)
 	router.Path("/User").Methods("GET").HandlerFunc(s.userHandler.GetAll)
 	//WORK

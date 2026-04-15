@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/gofrs/uuid"
@@ -219,13 +220,18 @@ func (a *AuthHandlers) RegistCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Avatar:", yaUser.Avatar, "First", yaUser.FirstName, "email", yaUser.Email, "last", yaUser.LastName)
-
 	yauser := entity.User{
 		FirstName:  yaUser.FirstName,
 		SecondName: yaUser.LastName,
 		Email:      yaUser.Email,
 		AvatarURL:  yaUser.Avatar,
+	}
+
+	email := strings.ToLower(strings.TrimSpace(yaUser.Email))
+	sfedu := strings.HasSuffix(email, "@sfedu.ru")
+	if !sfedu {
+		HttpError(w, fmt.Errorf("Try another account. Use email with @sfedu.ru"), http.StatusBadRequest)
+		return
 	}
 
 	createdUsers, err := a.userUseCase.CreateUser([]entity.User{yauser})
@@ -362,4 +368,94 @@ func (h *UserHandlers) MakeSuperAdmin(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(b); err != nil {
 		fmt.Println("Error to write answer to http: ", err)
 	}
+}
+
+func (h *UserHandlers) CreateLink(w http.ResponseWriter, r *http.Request) {
+	user := UserIdDTO{}
+
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	link, err := h.userUseCase.VKCreateLink(user.Id)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	Link := LinkDTO{Link: link}
+
+	b, err := json.MarshalIndent(Link, "", "    ")
+
+	if err != nil {
+
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(b); err != nil {
+		fmt.Println("Error to write answer to http: ", err)
+	}
+}
+
+func (h *UserHandlers) ConnectVk(w http.ResponseWriter, r *http.Request) {
+	vk := VkConnection{}
+
+	err := json.NewDecoder(r.Body).Decode(&vk)
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = h.userUseCase.UserRepo.ConnectVK(vk.Token, vk.VkId)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *UserHandlers) GetUserByVkId(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("vkid")
+	if id == "" {
+		HttpError(w, errors.New("vkid query param is required"), http.StatusBadRequest)
+		return
+	}
+
+	vkID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		HttpError(w, errors.New("invalid vk_id format"), http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userUseCase.GetByVkId(int(vkID))
+
+	if err != nil {
+		if errors.As(err, &usecase.ErrNotFound) {
+			HttpError(w, err, http.StatusNotFound)
+			return
+		} else {
+			HttpError(w, err, http.StatusInternalServerError)
+			return
+		}
+	}
+
+	b, err := json.MarshalIndent(user, "", "    ")
+
+	if err != nil {
+		HttpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(b); err != nil {
+		fmt.Println("Error to write answer to http: ", err)
+	}
+
 }

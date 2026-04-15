@@ -71,6 +71,19 @@ type UploadDTO struct {
 	URL string `json:"url"`
 }
 
+type LinkDTO struct {
+	Link string `json:"link"`
+}
+
+type UserIdDTO struct {
+	Id uuid.UUID `json:"user_id"`
+}
+
+type VkConnection struct {
+	VkId  int       `json:"vk_id"`
+	Token uuid.UUID `json:"token"`
+}
+
 func HttpError(w http.ResponseWriter, err error, status int) {
 	errdto := errDTO{
 		Err:  err.Error(),
