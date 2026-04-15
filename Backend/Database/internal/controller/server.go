@@ -76,6 +76,9 @@ func (s *HTTPServer) Run() {
 	fs := http.FileServer(http.Dir("./uploads"))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 
+	fss := http.FileServer(http.Dir("./frontend"))
+	router.PathPrefix("/").Handler(fss)
+
 	d := middleware.CorsMiddleware(router)
 	handler := rec.Middleware(d)
 	http.ListenAndServe(":8080", handler)

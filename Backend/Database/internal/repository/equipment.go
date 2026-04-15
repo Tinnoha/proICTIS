@@ -1,26 +1,22 @@
 package repository
 
 import (
-	"context"
 	"database/internal/entity"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/redis/go-redis/v9"
 )
 
 type equipmentRepo struct {
 	db Baza
 }
 
-func NewEquipmentRepo(postr *sqlx.DB, redis *redis.Client) *equipmentRepo {
-	baza := Baza{post: postr, redis: redis}
+func NewEquipmentRepo(postr *sqlx.DB) *equipmentRepo {
+	baza := Baza{post: postr}
 	return &equipmentRepo{
 		db: baza,
 	}
@@ -28,17 +24,17 @@ func NewEquipmentRepo(postr *sqlx.DB, redis *redis.Client) *equipmentRepo {
 
 func (e *equipmentRepo) GetAll() ([]entity.Equipment, error) {
 
-	b, err := e.db.redis.Get(context.Background(), "Equipment").Result()
-	var equipmen []entity.Equipment
-	if err == nil {
-		if err := json.Unmarshal([]byte(b), &equipmen); err == nil {
-			return equipmen, nil
-		}
-	}
+	// b, err := e.db.redis.Get(context.Background(), "Equipment").Result()
+	// var equipmen []entity.Equipment
+	// if err == nil {
+	// 	if err := json.Unmarshal([]byte(b), &equipmen); err == nil {
+	// 		return equipmen, nil
+	// 	}
+	// }
 
-	if err == nil {
-		return equipmen, nil
-	}
+	// if err == nil {
+	// 	return equipmen, nil
+	// }
 
 	rows, err := e.db.post.Query(`SELECT 
 		proICTIS_equipment.id,
@@ -85,15 +81,15 @@ func (e *equipmentRepo) GetAll() ([]entity.Equipment, error) {
 		return nil, err
 	}
 
-	redisData, err := json.Marshal(equipments)
+	// redisData, err := json.Marshal(equipments)
 
-	if err != nil {
-		return nil, err
-	}
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	if err := e.db.redis.Set(context.Background(), "Equipment", redisData, time.Minute).Err(); err != nil {
-		fmt.Println("Error to save redis data", err)
-	}
+	// if err := e.db.redis.Set(context.Background(), "Equipment", redisData, time.Minute).Err(); err != nil {
+	// 	fmt.Println("Error to save redis data", err)
+	// }
 
 	return equipments, nil
 
@@ -287,19 +283,25 @@ func (e *equipmentRepo) EditType(OneType entity.TypeOfEquipment) (entity.TypeOfE
 }
 
 func (e *equipmentRepo) DeleteType(id uuid.UUID) error {
-	res, err := e.db.post.Exec(`Delete from proICTIS_type_of_equipment where id = $1`, id)
+	var count int64
+	err := e.db.post.QueryRow(`SELECT COUNT(*) FROM proICTIS_equipment WHERE type_id = $1`, id).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New("нельзя удалить тип: существуют карточки оборудования с этим типом")
+	}
 
+	res, err := e.db.post.Exec(`DELETE FROM proICTIS_type_of_equipment WHERE id = $1`, id)
 	if err != nil {
 		return err
 	}
 
-	count, err := res.RowsAffected()
-
+	affected, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
-
-	if count == 0 {
+	if affected == 0 {
 		return sql.ErrNoRows
 	}
 
@@ -352,11 +354,11 @@ func (e *equipmentRepo) Add(equipment entity.Equipment) (entity.Equipment, error
 		return entity.Equipment{}, err
 	}
 
-	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+	// err = e.db.redis.Del(context.Background(), "Equipment").Err()
 
-	if err != nil {
-		return entity.Equipment{}, err
-	}
+	// if err != nil {
+	// 	return entity.Equipment{}, err
+	// }
 
 	return equipment, nil
 }
@@ -465,11 +467,11 @@ func (e *equipmentRepo) Edit(equipment entity.Equipment, ID uuid.UUID) (entity.E
 		return entity.Equipment{}, err
 	}
 
-	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+	// err = e.db.redis.Del(context.Background(), "Equipment").Err()
 
-	if err != nil {
-		return entity.Equipment{}, err
-	}
+	// if err != nil {
+	// 	return entity.Equipment{}, err
+	// }
 
 	return editedEquipment, nil
 }
@@ -489,11 +491,11 @@ func (e *equipmentRepo) SetActive(id uuid.UUID, active bool) error {
 		return sql.ErrNoRows
 	}
 
-	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+	// err = e.db.redis.Del(context.Background(), "Equipment").Err()
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -514,11 +516,11 @@ func (e *equipmentRepo) Delete(id uuid.UUID) error {
 		return sql.ErrNoRows
 	}
 
-	err = e.db.redis.Del(context.Background(), "Equipment").Err()
+	// err = e.db.redis.Del(context.Background(), "Equipment").Err()
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

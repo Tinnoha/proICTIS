@@ -6,12 +6,10 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
-	"github.com/redis/go-redis/v9"
 )
 
 type Baza struct {
-	post  *sqlx.DB
-	redis *redis.Client
+	post *sqlx.DB
 }
 
 func NewDatabase() *sqlx.DB {
@@ -67,7 +65,10 @@ func CreateTables(db *sqlx.DB) error {
 		email varchar(255) UNIQUE,
 		avatar_URL varchar(255),
 		role varchar(255),
-		token_provider integer
+		token_provider integer,
+		vk_id bigint,
+		vk_token UUID,
+		time_token TIMESTAMPTZ
 		)
 	`)
 

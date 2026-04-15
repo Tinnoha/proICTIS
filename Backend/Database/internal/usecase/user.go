@@ -187,7 +187,7 @@ func (uc *UserUseCase) VKCreateLink(userId uuid.UUID) (string, error) {
 }
 
 func (uc *UserUseCase) VKConnect(VkId int, token uuid.UUID) error {
-	return uc.VKConnect(VkId, token)
+	return uc.UserRepo.ConnectVK(token, VkId)
 }
 
 func (uc *UserUseCase) GetByVkId(VKId int) (entity.User, error) {

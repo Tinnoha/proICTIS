@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проектное пространство ПРОИКТИБ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">
+                <img src="./img/header/header__proictis.svg" alt="ПРОИКТИБ" class="nav-logo-img">
+            </a>
+            
+            <nav class="nav-menu">
+                <a href="#home" class="nav-link active">Главная</a>
+                <a href="#partners" class="nav-link">Партнёры</a>
+                <a href="#booking" class="nav-link">Бронирование</a>
+                <a href="#equipment" class="nav-link">Оборудование</a>
+                <a href="#contacts" class="nav-link">Контакты</a>
+            </nav>
+
+            <!-- Кнопка входа (показывается когда НЕ авторизован) -->
+            <!-- <button class="auth-btn" id="authBtn">
+                <img src="./img/header/yandex__logo.svg" alt="Yandex" class="auth-icon">
+                <span class="auth-text">Войти</span>
+            </button> -->
+            
+            <div class="nav-right">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <button class="auth-btn" id="authBtn">
+                    <img src="./img/header/yandex__logo.svg" alt="Yandex" class="auth-icon">
+                    <span class="auth-text">Войти</span>
+                </button>
+                <!-- Аватар пользователя (скрыт по умолчанию, показывается после входа) -->
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <div class="user-avatar-wrapper">
+                        <img src="" alt="User" class="user-avatar" id="userAvatar">
+                    </div>
+                    
+                    <!-- Выпадающее меню -->
+                    <div class="user-dropdown-menu" id="userDropdown">
+                        <div class="dropdown-header">
+                            <img src="" alt="User" class="dropdown-avatar" id="dropdownAvatar">
+                            <div class="dropdown-info">
+                                <div class="dropdown-name" id="dropdownName">Пользователь</div>
+                                <div class="dropdown-email" id="dropdownEmail">user@example.com</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-logout" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Выйти</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </nav>
+
+    <!-- Главный экран (Hero) -->
+    <header class="hero-section" id="home">
+        <!-- <video autoplay muted loop class="hero-video">
+            <source src="./video.mp4" type="video/mp4">
+        </video> -->
+        <!-- <div class="overlay"></div> -->
+
+        <div class="container hero-content">
+            <!-- Логотипы подразделений (верхний ряд) -->
+            <div class="sub-logos">
+                <a href="https://sfedu.ru" target="_blank" rel="noopener noreferrer" class="sub-logo-link">
+                    <div class="sub-logo-item">
+                        <img src="./img/header/header__sfedu.svg" alt="ЮФУ" class="sub-logo-white">
+                    </div>
+                </a>
+                <a href="https://ictis.sfedu.ru" target="_blank" rel="noopener noreferrer" class="sub-logo-link">
+                    <div class="sub-logo-item">
+                        <img src="./img/header/header__ictis.png" alt="ИКТИБ" class="sub-logo-white">
+                    </div>
+                </a>
+                <a href="https://vk.com/proictis" target="_blank" rel="noopener noreferrer" class="sub-logo-link">
+                    <div class="sub-logo-item">
+                        <img src="./img/header/header__office.png" alt="Проектный офис" class="sub-logo-white">
+                    </div>
+                </a>
+            </div>
+
+            <!-- Основной логотип и слоган -->
+            <div class="main-brand">
+                <img src="./img/header/header__proictis.svg" alt="Проектное пространство ПРОИКТИБ" class="main-logo-img">
+                <p class="slogan">Воплощай идеи в реальность!</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Секция Партнеры -->
+        <section class="partners-section" id="partners">
+            <h2 class="section-title">Наши партнеры</h2>
+            <div class="partners-grid">
+                <a href="https://itmagiclab.com/" target="_blank" class="partner-card">
+                    <img src="./img/partners/partners__itmagiclab.svg" alt="ITMagicLab">
+                </a>
+                <a href="https://nkbvs.ru/" target="_blank" class="partner-card partner-offset" data-vertical-offset="-30">
+                    <img src="./img/partners/partners__nkbvs.svg" alt="НКБ ВС">
+                </a>
+                <a href="https://www.pljonkins.ru/" target="_blank" class="partner-card">
+                    <img src="./img/partners/partners__pljonkins.svg" alt="PLJONKINS">
+                </a>
+                <a href="https://lantera.su/" target="_blank" class="partner-card">
+                    <img src="./img/partners/partners__lantera.svg" alt="Lantern">
+                </a>
+            </div>
+        </section>
+
+        <!-- ========== СЕКЦИЯ БРОНИРОВАНИЯ ========== -->
+        <section id="booking" class="booking-section">
+            <h2 class="section-title">Бронирование оборудования</h2>
+            <div class="booking-content">
+                <div class="booking-text">
+                    <p>Вы можете забронировать оборудование с помощью нашего <a href="https://t.me/PPP_ictis_bot" target="_blank" class="bot-link">бота</a></p>
+                </div>
+                <a href="https://t.me/PPP_ictis_bot" target="_blank">
+                    <div class="booking-qr">
+                        <img src="./img/qr-code2.png" alt="QR-код для бронирования">
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Секция Оборудование -->
+        <section class="equipment-section" id="equipment">
+            <h2 class="section-title">Лаборатория и оборудование</h2>
+            
+            <!-- Поиск с кнопкой -->
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" placeholder="Поиск оборудования..." class="search-input">
+                <button class="search-btn" type="button">Найти</button>
+            </div>
+
+            <!-- Категории (Кнопки) -->
+            <div class="categories">
+                <button class="cat-btn delete-types-btn" title="Удалить типы оборудования" style="display: none;">
+                    <i class="fas fa-trash"></i>
+                </button>
+                
+                <!-- Кнопка добавления типа (только для админов) -->
+                <button class="cat-btn add-type-btn" title="Добавить тип оборудования" style="display: none;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Сетка оборудования (карточки рендерятся через JS) -->
+            <div class="equipment-grid">
+                <!-- Карточка "Добавить" (Последняя) -->
+                <div class="equip-card add-card">
+                    <div class="plus-icon">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="equip-info">
+                        <h3>Добавить оборудование</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Модальное окно для добавления оборудования -->
+    <div class="modal">
+        <div class="modal-content">
+            <button class="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="modal-body">
+                <!-- Левая часть - загрузка фото -->
+                <div class="modal-left">
+                    <div class="upload-area">
+                        <i class="fas fa-plus"></i>
+                        <span>Нажмите для загрузки фото</span>
+                        <small>или перетащите файл сюда</small>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
+                </div>
+                
+                <!-- Правая часть - поля ввода -->
+                <div class="modal-right">
+                    <div class="form-group">
+                        <label for="equipmentName">Название оборудования</label>
+                        <input type="text" id="equipmentName" placeholder="Например: Prusa i3 MK3S+">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Категория оборудования</label>
+                        <div class="custom-dropdown" id="categoryDropdown">
+                            <div class="dropdown-trigger" id="dropdownTrigger">
+                                <span class="dropdown-selected">Выберите категорию</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </div>
+                            <div class="dropdown-menu" id="dropdownMenu">
+                                <div class="dropdown-option" data-value="">Выберите категорию</div>
+                                <!-- Опции будут добавлены динамически из JS -->
+                            </div>
+                        </div>
+                        <!-- Скрытый инпут для отправки данных -->
+                        <input type="hidden" id="equipmentCategory" name="equipmentCategory">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="equipmentDescription">Описание оборудования</label>
+                        <textarea id="equipmentDescription" placeholder="Опишите характеристики оборудования&#10;Можно использовать переносы строк" rows="4"></textarea>
+                    </div>
+                    
+                    <button class="add-equipment-btn">
+                        <i class="fas fa-check"></i> Добавить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Футер -->
+    <footer id="contacts">
+        <div class="container footer-content">
+            <div class="footer-info">
+                <h3>Контакты</h3>
+                <p><i class="fas fa-map-marker-alt"></i> г. Таганрог, ул. Чехова 2, корпус И, ауд. 225</p>
+                <p><i class="fas fa-phone"></i> +7 905 459 21 58 - Плёнкин А. П.</p>
+                <p><i class="fas fa-envelope"></i> proictis@sfedu.ru</p>
+            </div>
+            
+            <div class="footer-credits">
+                <p>Разработано командой ППП ИКТИБ, 2026</p>
+                <a href="./team/team.html" class="team-link">Посмотреть команду <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Подключаем скрипты -->
+    <script src="./js/api.js"></script>
+    <script src="./js/equipment.js"></script>
+    <script src="./js/script.js"></script>
+</body>
+</html>

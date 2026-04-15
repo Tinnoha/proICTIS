@@ -257,7 +257,7 @@ func (a *AuthHandlers) RegistCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	frontendToken := createdUser.Id.String()
-	frontendBaseURL := "http://127.0.0.1:5500/Frontend/index.html"
+	frontendBaseURL := "http://localhost:8080"
 
 	frontendURL := fmt.Sprintf("%s?token=%s&email=%s&firstName=%s&lastName=%s&avatar=%s&role=%s",
 		frontendBaseURL,
@@ -411,7 +411,7 @@ func (h *UserHandlers) ConnectVk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.userUseCase.UserRepo.ConnectVK(vk.Token, vk.VkId)
+	err = h.userUseCase.VKConnect(vk.VkId, vk.Token)
 
 	if err != nil {
 		HttpError(w, err, http.StatusBadRequest)

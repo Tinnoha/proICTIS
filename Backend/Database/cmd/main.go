@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/internal/config"
 	"database/internal/controller"
 	"database/internal/controller/handlers"
@@ -9,33 +8,32 @@ import (
 	"database/internal/usecase"
 	"fmt"
 	"os"
-	"time"
 )
 
 func main() {
-	cfgRedis := config.RedisCondig{
-		Addr:        "localhost:6379",
-		Password:    "test1234",
-		User:        "testuser",
-		DB:          0,
-		MaxRetries:  5,
-		DialTimeout: 10 * time.Second,
-		Timeout:     5 * time.Second,
-	}
+	// cfgRedis := config.RedisCondig{
+	// 	Addr:        "localhost:6379",
+	// 	Password:    "test1234",
+	// 	User:        "testuser",
+	// 	DB:          0,
+	// 	MaxRetries:  5,
+	// 	DialTimeout: 10 * time.Second,
+	// 	Timeout:     5 * time.Second,
+	// }
 	db := repository.NewDatabase()
-	red, err := config.NewRedisConfig(context.Background(), cfgRedis)
-	if err != nil {
-		panic(err)
-	}
+	// red, err := config.NewRedisConfig(context.Background(), cfgRedis)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	err = repository.CreateTables(db)
+	err := repository.CreateTables(db)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("We create db")
 
 	bookingRepo := repository.NewBookingRepo(*db)
-	equipmentRepo := repository.NewEquipmentRepo(db, red)
+	equipmentRepo := repository.NewEquipmentRepo(db)
 	userRepo := repository.NewUserRepo(*db)
 
 	basePath := os.Getenv("STORAGE_PATH")
