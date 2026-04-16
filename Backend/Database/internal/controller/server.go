@@ -79,8 +79,9 @@ func (s *HTTPServer) Run() {
 	fss := http.FileServer(http.Dir("./frontend"))
 	router.PathPrefix("/").Handler(fss)
 
-	d := middleware.CorsMiddleware(router)
-	handler := rec.Middleware(d)
-	http.ListenAndServe(":8080", handler)
+	handler := rec.Middleware(router)
+	d := middleware.CorsMiddleware(handler)
+
+	http.ListenAndServe(":8080", d)
 	fmt.Println("We finish HTTP SERVER")
 }
