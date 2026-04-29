@@ -39,7 +39,16 @@ func NewUserUseCase(
 	}
 }
 
-func (uc *UserUseCase) GetAll() ([]entity.User, error) {
+func (uc *UserUseCase) GetAll(user uuid.UUID) ([]entity.User, error) {
+	admin, err := uc.UserRepo.IsAdmin(user)
+	if err != nil {
+		return []entity.User{}, err
+	}
+
+	if !admin {
+		fmt.Println(user, "Try to fatatl our service!")
+		return []entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
+	}
 	vasya, err := uc.UserRepo.GetAll()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

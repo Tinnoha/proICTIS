@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	rec "github.com/Mijxmon/Recav"
+	recover "github.com/Mijxmon/Recav"
 	"github.com/gorilla/mux"
 )
 
@@ -79,7 +79,7 @@ func (s *HTTPServer) Run() {
 	fss := http.FileServer(http.Dir("./frontend"))
 	router.PathPrefix("/").Handler(fss)
 
-	handler := rec.Middleware(router)
+	handler := recover.Middleware(router)
 	d := middleware.CorsMiddleware(handler)
 
 	http.ListenAndServe(":8080", d)

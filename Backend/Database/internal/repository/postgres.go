@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gofrs/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 )
@@ -119,6 +120,29 @@ func CreateTables(db *sqlx.DB) error {
 		return err
 	}
 
-	return nil
+	const insertSuperAdmin = `
+		INSERT INTO proICTIS_user 
+		(id, first_name, second_name, email, avatar_url, role, token_provider, vk_id, vk_token, time_token)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		ON CONFLICT (email) DO NOTHING
+	`
+	superAdminID, _ := uuid.FromString("0afa4c33-cf8e-4592-8808-c5aee26b64df")
+	_, err = db.Exec(insertSuperAdmin,
+		superAdminID,
+		"Тимофей",
+		"Спицын",
+		"tspitsyn@sfedu.ru",
+		"35885/s0z3G44bvVnfi2d23ELptnuy8lU-1",
+		"Super_Admin",
+		0,
+		nil,
+		nil,
+		nil,
+	)
+	if err != nil {
+		fmt.Printf("Предупреждение: не удалось вставить суперадмина: %v\n", err)
+	}
 
+	fmt.Println("Все таблицы созданы, начальные данные добавлены")
+	return nil
 }

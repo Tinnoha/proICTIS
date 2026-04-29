@@ -36,7 +36,16 @@ func NewAuthHandlers(cfg *oauth2.Config, userUseCase usecase.UserUseCase) *AuthH
 }
 
 func (h *UserHandlers) GetAll(w http.ResponseWriter, r *http.Request) {
-	user, err := h.userUseCase.GetAll()
+	admin := AdminDTO{}
+
+	err := json.NewDecoder(r.Body).Decode(&admin)
+
+	if err != nil {
+		HttpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.userUseCase.GetAll(admin.AdminId)
 
 	if err != nil {
 		if errors.As(err, &usecase.ErrNotFound) {
@@ -76,6 +85,7 @@ failed:
   - response body: JSON with error + time
 */
 func (h *UserHandlers) GetUserById(w http.ResponseWriter, r *http.Request) {
+
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -225,13 +235,6 @@ func (a *AuthHandlers) RegistCallback(w http.ResponseWriter, r *http.Request) {
 		SecondName: yaUser.LastName,
 		Email:      yaUser.Email,
 		AvatarURL:  yaUser.Avatar,
-	}
-
-	email := strings.ToLower(strings.TrimSpace(yaUser.Email))
-	sfedu := strings.HasSuffix(email, "@sfedu.ru")
-	if !sfedu {
-		HttpError(w, fmt.Errorf("Try another account. Use email with @sfedu.ru"), http.StatusBadRequest)
-		return
 	}
 
 	createdUsers, err := a.userUseCase.CreateUser([]entity.User{yauser})
