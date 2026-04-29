@@ -106,11 +106,9 @@ func (uc *BookingUseCase) EditStatusBooking(AdminId uuid.UUID, BookingId uuid.UU
 	}
 
 	if status == "Cancel" || status == "Returned" {
-		fmt.Println("messi")
 		err := uc.BookingRepo.DeleteBooking(BookingId)
 
 		if err != nil {
-			fmt.Println("Ronaldo")
 			return entity.Booking{}, ErrInntenal(err)
 		}
 		return entity.Booking{}, nil
@@ -119,9 +117,7 @@ func (uc *BookingUseCase) EditStatusBooking(AdminId uuid.UUID, BookingId uuid.UU
 	arenda, err := uc.BookingRepo.EditStatusBooking(BookingId, status)
 
 	if err != nil {
-		fmt.Println("Neymar")
 		if errors.Is(err, sql.ErrNoRows) {
-			fmt.Println("Saul")
 			return entity.Booking{}, ErrNotFound
 		}
 		return entity.Booking{}, ErrInntenal(err)
