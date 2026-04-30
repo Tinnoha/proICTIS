@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -8,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -40,7 +40,7 @@
                 </div>
                 <button class="auth-btn" id="authBtn">
                     <img src="./img/header/yandex__logo.svg" alt="Yandex" class="auth-icon">
-                    <span class="auth-text">Войти @sfedu</span>
+                    <span class="auth-text">Войти</span>
                 </button>
                 <!-- Аватар пользователя (скрыт по умолчанию, показывается после входа) -->
                 <div class="user-menu" id="userMenu" style="display: none;">
@@ -53,8 +53,10 @@
                         <div class="dropdown-header">
                             <img src="" alt="User" class="dropdown-avatar" id="dropdownAvatar">
                             <div class="dropdown-info">
-                                <div class="dropdown-name" id="dropdownName">Пользователь</div>
+                                <div class="dropdown-name" id="dropdownName">Имя Фамилия</div>
+                                <div class="dropdown-role" id="dropdownRole">Пользователь</div>
                                 <div class="dropdown-email" id="dropdownEmail">user@example.com</div>
+                                <!-- <div class="dropdown-role" id="dropdownRole">Пользователь</div> -->
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
@@ -130,19 +132,19 @@
             <h2 class="section-title">Бронирование оборудования</h2>
             <div class="booking-content">
                 <div class="booking-text">
-                    <p>Вы можете забронировать оборудование с помощью нашего <a href="https://t.me/PPP_ictis_bot" target="_blank" class="bot-link">бота</a></p>
+                    <p>Вы можете забронировать оборудование с помощью нашего 
+                        <a href="#" class="bot-link dynamic-link" id="botLink">бота</a>
+                    </p>
                 </div>
-                <a href="https://t.me/PPP_ictis_bot" target="_blank">
-                    <div class="booking-qr">
-                        <img src="./img/qr-code2.png" alt="QR-код для бронирования">
-                    </div>
-                </a>
+                <div class="booking-qr">
+                    <img data-qr-image alt="QR-код для бронирования" style="cursor: pointer;" title="Нажмите для перехода">
+                </div>
             </div>
         </section>
 
         <!-- Секция Оборудование -->
         <section class="equipment-section" id="equipment">
-            <h2 class="section-title">Лаборатория и оборудование</h2>
+            <h2 class="section-title">Оборудование лаборатории И-225</h2>
             
             <!-- Поиск с кнопкой -->
             <div class="search-container">
@@ -254,5 +256,6 @@
     <script src="./js/api.js"></script>
     <script src="./js/equipment.js"></script>
     <script src="./js/script.js"></script>
+    <script src="./js/booking.js"></script>
 </body>
 </html>

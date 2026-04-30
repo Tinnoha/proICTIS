@@ -1084,14 +1084,9 @@ if (addBtn) {
         addBtn.textContent = 'Загрузка...';
 
         try {
-            const user = getCurrentUser();
-            if (!user || !user.Id) {
-                throw new Error('Не удалось определить ID пользователя');
-            }
-            
+            // 🔧 1. Загружаем изображение НА ЛОКАЛЬНЫЙ СЕРВЕР
             const formData = new FormData();
             formData.append('image', selectedFile);
-            formData.append('admin_id', user.Id);
             
             const uploadResponse = await fetch('http://localhost:8080/api/upload', {
                 method: 'POST',
@@ -1099,16 +1094,17 @@ if (addBtn) {
             });
             
             if (!uploadResponse.ok) {
-                const errorText = await uploadResponse.text();
-                throw new Error(`Ошибка загрузки: ${uploadResponse.status} ${errorText}`);
+                throw new Error('Не удалось загрузить изображение');
             }
             
             const uploadData = await uploadResponse.json();
-            const imageUrl = uploadData.url;
+            const imageUrl = uploadData.url; // ✅ Получаем URL от сервера (например: /static/equipment/abc123.png)
+            
             console.log('✅ Изображение загружено:', imageUrl);
             
+            // 🔧 2. Добавляем оборудование с URL
             const success = await addEquipment({
-                image: imageUrl,
+                image: imageUrl,  // URL с локального сервера
                 title: name,
                 category: category,
                 description: description,
@@ -1120,11 +1116,12 @@ if (addBtn) {
                 modal.classList.remove('active');
                 document.body.style.overflow = '';
                 resetModal();
+                // alert('✅ Оборудование успешно добавлено!');
                 console.log('✅ Оборудование успешно добавлено!');
             }
         } catch (error) {
             console.error('Ошибка:', error);
-            alert(error.message);
+            // alert('Ошибка: ' + error.message);
         } finally {
             addBtn.disabled = false;
             addBtn.textContent = 'Добавить';
@@ -1310,6 +1307,7 @@ const userDropdown = document.getElementById('userDropdown');
 const logoutBtn = document.getElementById('logoutBtn');
 const dropdownAvatar = document.getElementById('dropdownAvatar');
 const dropdownName = document.getElementById('dropdownName');
+const dropdownRole = document.getElementById('dropdownRole');
 const dropdownEmail = document.getElementById('dropdownEmail');
 
 function updateAuthButton() {
@@ -1345,8 +1343,19 @@ function updateAuthButton() {
             };
         }
         
-        const fullName = `${user.FirstName || ''} ${user.SecondName || ''}`.trim() || 'Пользователь';
+        const fullName = `${user.FirstName || ''} ${user.SecondName || ''}`.trim() || 'Имя Фамилия';
         if (dropdownName) dropdownName.textContent = fullName;
+        if (dropdownRole) {
+            const roleMap = {
+                'super_admin': 'Главный администратор',
+                'admin': 'Администратор', 
+                'student': 'Студент'
+            };
+            const roleKey = (user.Role || '').toLowerCase();
+            dropdownRole.textContent = roleMap[roleKey] || 'Пользователь';
+            // Добавляем класс для стилизации
+            dropdownRole.className = 'dropdown-role role-' + roleKey;
+        }
         if (dropdownEmail) dropdownEmail.textContent = user.Email;
         
         const addCard = document.querySelector('.add-card');
@@ -1475,4 +1484,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
