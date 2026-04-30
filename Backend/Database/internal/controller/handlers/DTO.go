@@ -13,6 +13,12 @@ type AdminDTO struct {
 	AdminId uuid.UUID `json:"admin_id"`
 }
 
+type ChangeRoleDTO struct {
+	AdminId uuid.UUID `json:"admin_id"`
+	UserId  uuid.UUID `json:"user_id"`
+	Role    string    `json:"role"`
+}
+
 type TypesDTO struct {
 	AdminId uuid.UUID                `json:"admin_id"`
 	Types   []entity.TypeOfEquipment `json:"types"`

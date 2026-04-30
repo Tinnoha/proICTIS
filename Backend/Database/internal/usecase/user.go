@@ -16,9 +16,9 @@ type UserRepository interface {
 	GetById(id uuid.UUID) (entity.User, error)
 	GetByEmail(email string) (entity.User, error)
 	CreateUser(entity.User) (entity.User, error)
-	MakeAdmin(id uuid.UUID) (entity.User, error)
-	MakeSuperAdmin(id uuid.UUID) (entity.User, error)
-
+	// MakeAdmin(id uuid.UUID) (entity.User, error)
+	// MakeSuperAdmin(id uuid.UUID) (entity.User, error)
+	ChangeRole(id uuid.UUID, role string) (entity.User, error)
 	IsAdmin(id uuid.UUID) (bool, error)
 	IsSuperAdmin(id uuid.UUID) (bool, error)
 
@@ -124,10 +124,13 @@ func (uc *UserUseCase) CreateUser(vasy []entity.User) ([]entity.User, error) {
 	return rezult, nil
 }
 
-func (uc *UserUseCase) MakeAdmin(AdminId, id uuid.UUID) (entity.User, error) {
+func (uc *UserUseCase) ChangeRole(AdminId, UserId uuid.UUID, role string) (entity.User, error) {
 	admin, err := uc.UserRepo.IsSuperAdmin(AdminId)
 	if err != nil {
-		return entity.User{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.User{}, ErrNotFound
+		}
+		return entity.User{}, ErrInntenal(err)
 	}
 
 	if !admin {
@@ -135,7 +138,7 @@ func (uc *UserUseCase) MakeAdmin(AdminId, id uuid.UUID) (entity.User, error) {
 		return entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
 	}
 
-	vasya, err := uc.UserRepo.MakeAdmin(id)
+	vasya, err := uc.UserRepo.ChangeRole(UserId, role)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -147,28 +150,51 @@ func (uc *UserUseCase) MakeAdmin(AdminId, id uuid.UUID) (entity.User, error) {
 	return vasya, nil
 }
 
-func (uc *UserUseCase) MakeSuperAdmin(AdminId, id uuid.UUID) (entity.User, error) {
-	admin, err := uc.UserRepo.IsSuperAdmin(AdminId)
-	if err != nil {
-		return entity.User{}, err
-	}
+// func (uc *UserUseCase) MakeAdmin(AdminId, id uuid.UUID) (entity.User, error) {
+// 	admin, err := uc.UserRepo.IsSuperAdmin(AdminId)
+// 	if err != nil {
+// 		return entity.User{}, err
+// 	}
 
-	if !admin {
-		fmt.Println(AdminId, "Try to fatatl our service!")
-		return entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
-	}
+// 	if !admin {
+// 		fmt.Println(AdminId, "Try to fatatl our service!")
+// 		return entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
+// 	}
 
-	vasya, err := uc.UserRepo.MakeSuperAdmin(id)
+// 	vasya, err := uc.UserRepo.MakeAdmin(id)
 
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return entity.User{}, ErrNotFound
-		}
-		return entity.User{}, ErrInntenal(err)
-	}
+// 	if err != nil {
+// 		if errors.Is(err, sql.ErrNoRows) {
+// 			return entity.User{}, ErrNotFound
+// 		}
+// 		return entity.User{}, ErrInntenal(err)
+// 	}
 
-	return vasya, nil
-}
+// 	return vasya, nil
+// }
+
+// func (uc *UserUseCase) MakeSuperAdmin(AdminId, id uuid.UUID) (entity.User, error) {
+// 	admin, err := uc.UserRepo.IsSuperAdmin(AdminId)
+// 	if err != nil {
+// 		return entity.User{}, err
+// 	}
+
+// 	if !admin {
+// 		fmt.Println(AdminId, "Try to fatatl our service!")
+// 		return entity.User{}, errors.New("You are not a admin ! ! ! ! ! !")
+// 	}
+
+// 	vasya, err := uc.UserRepo.MakeSuperAdmin(id)
+
+// 	if err != nil {
+// 		if errors.Is(err, sql.ErrNoRows) {
+// 			return entity.User{}, ErrNotFound
+// 		}
+// 		return entity.User{}, ErrInntenal(err)
+// 	}
+
+// 	return vasya, nil
+// }
 
 func (uc *UserUseCase) GetByEmailNoAuth(email string) (entity.User, error) {
 	user, err := uc.UserRepo.GetByEmail(email)

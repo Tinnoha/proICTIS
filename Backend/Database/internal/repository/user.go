@@ -147,15 +147,15 @@ func (u *userRepo) CreateUser(user entity.User) (entity.User, error) {
 	return user, nil
 }
 
-func (u *userRepo) MakeAdmin(id uuid.UUID) (entity.User, error) {
+func (u *userRepo) ChangeRole(id uuid.UUID, role string) (entity.User, error) {
 	user := entity.User{Id: id}
 
 	err := u.db.QueryRow(
 		`UPDATE PROICTIS_user
-		set role='Admin'
-		WHERE id = $1
+		set role=$1
+		WHERE id = $2
 		RETURNING first_name, second_name, email,avatar_url,role,token_provider
-		`, id).Scan(
+		`, role, id).Scan(
 		&user.FirstName,
 		&user.SecondName,
 		&user.Email,
@@ -171,29 +171,53 @@ func (u *userRepo) MakeAdmin(id uuid.UUID) (entity.User, error) {
 	return user, nil
 }
 
-func (u *userRepo) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
-	user := entity.User{Id: id}
+// func (u *userRepo) MakeAdmin(id uuid.UUID) (entity.User, error) {
+// 	user := entity.User{Id: id}
 
-	err := u.db.QueryRow(
-		`UPDATE PROICTIS_user
-		set role='Super_Admin'
-		WHERE id = $1
-		RETURNING first_name, second_name, email,avatar_url,role,token_provider
-		`, id).Scan(
-		&user.FirstName,
-		&user.SecondName,
-		&user.Email,
-		&user.AvatarURL,
-		&user.Role,
-		&user.TokenProvider,
-	)
+// 	err := u.db.QueryRow(
+// 		`UPDATE PROICTIS_user
+// 		set role='Admin'
+// 		WHERE id = $1
+// 		RETURNING first_name, second_name, email,avatar_url,role,token_provider
+// 		`, id).Scan(
+// 		&user.FirstName,
+// 		&user.SecondName,
+// 		&user.Email,
+// 		&user.AvatarURL,
+// 		&user.Role,
+// 		&user.TokenProvider,
+// 	)
 
-	if err != nil {
-		return entity.User{}, err
-	}
+// 	if err != nil {
+// 		return entity.User{}, err
+// 	}
 
-	return user, nil
-}
+// 	return user, nil
+// }
+
+// func (u *userRepo) MakeSuperAdmin(id uuid.UUID) (entity.User, error) {
+// 	user := entity.User{Id: id}
+
+// 	err := u.db.QueryRow(
+// 		`UPDATE PROICTIS_user
+// 		set role='Super_Admin'
+// 		WHERE id = $1
+// 		RETURNING first_name, second_name, email,avatar_url,role,token_provider
+// 		`, id).Scan(
+// 		&user.FirstName,
+// 		&user.SecondName,
+// 		&user.Email,
+// 		&user.AvatarURL,
+// 		&user.Role,
+// 		&user.TokenProvider,
+// 	)
+
+// 	if err != nil {
+// 		return entity.User{}, err
+// 	}
+
+// 	return user, nil
+// }
 
 func (u *userRepo) IsAdmin(id uuid.UUID) (bool, error) {
 	role := ""

@@ -289,18 +289,15 @@ failed:
   - status code:   400, 404, 500, ...
   - response body: JSON with error + time
 */
-func (h *UserHandlers) MakeAdmin(w http.ResponseWriter, r *http.Request) {
-
-	admins := AdminsDTO{}
-	err := json.NewDecoder(r.Body).Decode(&admins)
-
+func (h *UserHandlers) ChangeRole(w http.ResponseWriter, r *http.Request) {
+	ChangeRoleDTO := ChangeRoleDTO{}
+	err := json.NewDecoder(r.Body).Decode(&ChangeRoleDTO)
 	if err != nil {
-
 		HttpError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	admin, err := h.userUseCase.MakeAdmin(admins.FirstAdmin, admins.SecondAdmin)
+	user, err := h.userUseCase.ChangeRole(ChangeRoleDTO.AdminId, ChangeRoleDTO.UserId, ChangeRoleDTO.Role)
 
 	if err != nil {
 		if errors.As(err, &usecase.ErrNotFound) {
@@ -313,7 +310,7 @@ func (h *UserHandlers) MakeAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := json.MarshalIndent(admin, "", "    ")
+	b, err := json.MarshalIndent(user, "", "    ")
 
 	if err != nil {
 
@@ -325,53 +322,92 @@ func (h *UserHandlers) MakeAdmin(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(b); err != nil {
 		fmt.Println("Error to write answer to http: ", err)
 	}
+
 }
 
-/*
-pattern: /user/superadmin
-method:  PUT
-info:    JSON with SuperAdmin user.id and new SuperAdmin id
+// func (h *UserHandlers) MakeAdmin(w http.ResponseWriter, r *http.Request) {
 
-succeed:
-  - status code:   200 OK
-  - response body: JSON represent edited user
+// 	admins := AdminsDTO{}
+// 	err := json.NewDecoder(r.Body).Decode(&admins)
 
-failed:
-  - status code:   400, 404, 500, ...
-  - response body: JSON with error + time
-*/
-func (h *UserHandlers) MakeSuperAdmin(w http.ResponseWriter, r *http.Request) {
-	admins := AdminsDTO{}
-	err := json.NewDecoder(r.Body).Decode(&admins)
+// 	if err != nil {
 
-	if err != nil {
-		HttpError(w, err, http.StatusBadRequest)
-		return
-	}
+// 		HttpError(w, err, http.StatusBadRequest)
+// 		return
+// 	}
 
-	admin, err := h.userUseCase.MakeSuperAdmin(admins.FirstAdmin, admins.SecondAdmin)
+// 	admin, err := h.userUseCase.MakeAdmin(admins.FirstAdmin, admins.SecondAdmin)
 
-	if err != nil {
-		if errors.As(err, &usecase.ErrNotFound) {
-			HttpError(w, err, http.StatusNotFound)
-			return
-		}
-		HttpError(w, err, http.StatusInternalServerError)
-		return
-	}
+// 	if err != nil {
+// 		if errors.As(err, &usecase.ErrNotFound) {
 
-	b, err := json.MarshalIndent(admin, "", "    ")
+// 			HttpError(w, err, http.StatusNotFound)
+// 			return
+// 		}
 
-	if err != nil {
-		HttpError(w, err, http.StatusInternalServerError)
-		return
-	}
+// 		HttpError(w, err, http.StatusInternalServerError)
+// 		return
+// 	}
 
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write(b); err != nil {
-		fmt.Println("Error to write answer to http: ", err)
-	}
-}
+// 	b, err := json.MarshalIndent(admin, "", "    ")
+
+// 	if err != nil {
+
+// 		HttpError(w, err, http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusOK)
+// 	if _, err := w.Write(b); err != nil {
+// 		fmt.Println("Error to write answer to http: ", err)
+// 	}
+// }
+
+// /*
+// pattern: /user/superadmin
+// method:  PUT
+// info:    JSON with SuperAdmin user.id and new SuperAdmin id
+
+// succeed:
+//   - status code:   200 OK
+//   - response body: JSON represent edited user
+
+// failed:
+//   - status code:   400, 404, 500, ...
+//   - response body: JSON with error + time
+// */
+// func (h *UserHandlers) MakeSuperAdmin(w http.ResponseWriter, r *http.Request) {
+// 	admins := AdminsDTO{}
+// 	err := json.NewDecoder(r.Body).Decode(&admins)
+
+// 	if err != nil {
+// 		HttpError(w, err, http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	admin, err := h.userUseCase.MakeSuperAdmin(admins.FirstAdmin, admins.SecondAdmin)
+
+// 	if err != nil {
+// 		if errors.As(err, &usecase.ErrNotFound) {
+// 			HttpError(w, err, http.StatusNotFound)
+// 			return
+// 		}
+// 		HttpError(w, err, http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	b, err := json.MarshalIndent(admin, "", "    ")
+
+// 	if err != nil {
+// 		HttpError(w, err, http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusOK)
+// 	if _, err := w.Write(b); err != nil {
+// 		fmt.Println("Error to write answer to http: ", err)
+// 	}
+// }
 
 func (h *UserHandlers) CreateLink(w http.ResponseWriter, r *http.Request) {
 	user := UserIdDTO{}
