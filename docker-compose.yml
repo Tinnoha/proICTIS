@@ -36,10 +36,18 @@ services:
       CLIENT_ID: ${CLIENT_ID}
       CLIENT_SECRET: ${CLIENT_SECRET}
       REDIRECT_URL: ${REDIRECT_URL}
-    volumes:
-      - uploads_data:/root/uploads
+
     restart: unless-stopped
+  vk-bot:
+    build:
+      context: ./vk-bot
+      dockerfile: Dockerfile
+    container_name: vk-booking-bot
+    restart: unless-stopped
+    env_file:
+      - ./vk-bot/.env
+    depends_on:
+      - app
 
 volumes:
   postgres_data:
-  uploads_data:

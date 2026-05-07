@@ -208,6 +208,7 @@ func (uc *UserUseCase) GetByEmailNoAuth(email string) (entity.User, error) {
 }
 
 func (uc *UserUseCase) VKCreateLink(userId uuid.UUID) (string, error) {
+	fmt.Println("We in Create Link usercase")
 	token := uuid.Must(uuid.NewV7()).String()
 
 	timeExpire := time.Now().Add(10 * time.Minute)
@@ -217,6 +218,8 @@ func (uc *UserUseCase) VKCreateLink(userId uuid.UUID) (string, error) {
 	if err != nil {
 		return "", ErrInntenal(err)
 	}
+
+	fmt.Println("We return Link")
 
 	return str, nil
 }

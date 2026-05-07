@@ -39,7 +39,7 @@ func (s *HTTPServer) Run() {
 	router.Path("/callback").HandlerFunc(s.authHandler.RegistCallback)
 	//WORK
 
-	router.Path("/User/vk").Methods("GET").HandlerFunc(s.userHandler.CreateLink)
+	router.Path("/User/vk").Methods("POST").HandlerFunc(s.userHandler.CreateLink)
 	router.Path("/User/vk").Methods("PATCH").HandlerFunc(s.userHandler.ConnectVk)
 	router.Path("/User/email").Methods("GET").HandlerFunc(s.userHandler.GetUserByEmail)
 	router.Path("/User/admin").Methods("PATCH").HandlerFunc(s.userHandler.ChangeRole)

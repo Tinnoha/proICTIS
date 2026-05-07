@@ -254,6 +254,7 @@ func (u *userRepo) CreateToken(
 	token string,
 	timeExpire time.Time,
 ) (string, error) {
+	fmt.Println("We in Create Link repo")
 	sqlRequest := `
 		UPDATE proICTIS_user 
 		SET vk_token = $2,
@@ -261,13 +262,19 @@ func (u *userRepo) CreateToken(
 		WHERE id = $1;
 		`
 
-	_, err := u.db.Exec(sqlRequest, userId, token, timeExpire)
+	pat, err := u.db.Exec(sqlRequest, userId, token, timeExpire)
+
+	if c, _ := pat.RowsAffected(); c == 0 {
+		return "", errors.New("user_id is not exists")
+	}
 
 	if err != nil {
 		return "", err
 	}
 
 	token = fmt.Sprintf("https://vk.com/write-237660555?ref=%s", token)
+
+	fmt.Println("We finish cteate link in repo")
 
 	return token, nil
 }

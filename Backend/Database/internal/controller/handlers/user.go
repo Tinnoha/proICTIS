@@ -412,6 +412,8 @@ func (h *UserHandlers) ChangeRole(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandlers) CreateLink(w http.ResponseWriter, r *http.Request) {
 	user := UserIdDTO{}
 
+	fmt.Println("We in Create Link handler")
+
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		HttpError(w, err, http.StatusBadRequest)
