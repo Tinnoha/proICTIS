@@ -390,7 +390,7 @@ class VKBookingBot:
         for eq in active_equipment[start_idx:end_idx]:
             message += f"**{eq.get('name', 'Без названия')}**\n"
             message += f"Тип: {eq.get('type', 'Не указан')}\n"
-            message += f"Аудитория: {eq.get('auditory', 'Не указана')}\n\n"
+            message += "Аудитория: И-225\n"
         
         await self.send_message(peer_id, message, keyboard=keyboard)
     
