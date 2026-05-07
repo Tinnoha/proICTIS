@@ -252,10 +252,58 @@
         </div>
     </footer>
 
+    <!-- Модальное окно: Выдать роль -->
+    <div class="modal" id="grantRoleModal">
+        <div class="modal-content" style="max-width: 900px; padding: 40px;">
+            <button class="modal-close"><i class="fas fa-times"></i></button>
+            <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Выдать роль</h2>
+            
+            <p style="text-align: center; color: #666; margin-bottom: 25px; font-size: 1.1rem;">
+                Выберите пользователя, а затем назначьте ему роль
+            </p>
+            
+            <div class="user-table-container">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="selectAllUsers">
+                            </th>
+                            <th>Имя Фамилия</th>
+                            <th>Email</th>
+                            <th>Текущая роль</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Сюда JS подгрузит пользователей -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="role-selection-row">
+                <label for="newRoleSelect" style="font-weight: 600; color: #333; margin-right: 15px;">
+                    Новая роль:
+                </label>
+                <select id="newRoleSelect" class="role-select">
+                    <option value="">Выберите роль...</option>
+                    <option value="Super_Admin">Главный администратор</option>
+                    <option value="Admin">Администратор</option>
+                    <option value="Student">Студент</option>
+                </select>
+            </div>
+            
+            <button class="grant-role-btn" id="confirmGrantRoleBtn">
+                <i class="fas fa-user-plus"></i>
+                <span>Выдать роль</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Подключаем скрипты -->
     <script src="./js/api.js"></script>
     <script src="./js/equipment.js"></script>
     <script src="./js/script.js"></script>
     <script src="./js/booking.js"></script>
+    <script src="./js/role.js"></script>
 </body>
 </html>

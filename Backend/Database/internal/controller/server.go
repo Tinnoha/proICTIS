@@ -45,7 +45,7 @@ func (s *HTTPServer) Run() {
 	router.Path("/User/admin").Methods("PATCH").HandlerFunc(s.userHandler.ChangeRole)
 	router.Path("/User/by-vk").Methods("GET").HandlerFunc(s.userHandler.GetUserByVkId)
 	router.Path("/User/{id}").Methods("GET").HandlerFunc(s.userHandler.GetUserById)
-	router.Path("/User").Methods("GET").HandlerFunc(s.userHandler.GetAll)
+	router.Path("/User").Methods("POST").HandlerFunc(s.userHandler.GetAll)
 	//WORK
 
 	router.Path("/Equipment").Methods("GET").HandlerFunc(s.equipmentHandler.GetAllEquipment)

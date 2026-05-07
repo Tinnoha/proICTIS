@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"database/internal/entity"
 	"database/internal/usecase"
@@ -8,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -290,6 +292,12 @@ failed:
   - response body: JSON with error + time
 */
 func (h *UserHandlers) ChangeRole(w http.ResponseWriter, r *http.Request) {
+	bodyBytes, _ := io.ReadAll(r.Body)
+	log.Printf("📥 Raw body: %s", string(bodyBytes))
+
+	// 2. Восстанавливаем Body для дальнейшего парсинга
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 	ChangeRoleDTO := ChangeRoleDTO{}
 	err := json.NewDecoder(r.Body).Decode(&ChangeRoleDTO)
 	if err != nil {
