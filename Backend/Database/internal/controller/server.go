@@ -35,6 +35,8 @@ func (s *HTTPServer) Run() {
 	fmt.Println("We start HTTP SERVER")
 	router := mux.NewRouter()
 
+	router.Path("/api/config").HandlerFunc(handlers.ConfigHandler)
+
 	router.Path("/Regist").HandlerFunc(s.authHandler.Regist)
 	router.Path("/callback").HandlerFunc(s.authHandler.RegistCallback)
 	//WORK

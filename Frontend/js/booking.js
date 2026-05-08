@@ -2,7 +2,7 @@
 // BOOKING & QR-CODE (исправленная версия)
 // ==========================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // --- 1. Проверка авторизации и скрытие секции для неавторизованных ---
     const authToken = localStorage.getItem('auth_token');
     if (!authToken) {
@@ -14,10 +14,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Базовый URL для API (из конфигурации, доступной после api.js)
-    const API_BASE = (typeof API_CONFIG !== 'undefined' && API_CONFIG.BASE_URL) 
-                     ? API_CONFIG.BASE_URL 
-                     : 'http://localhost:8080';
-
+    let cachedBaseUrl = null;
+    async function getBaseUrl() {
+        if (!cachedBaseUrl) {
+            const res = await fetch('/api/config');
+            const config = await res.json();
+            cachedBaseUrl = config.base_url;
+        }
+        return cachedBaseUrl;
+    }
+    const API_BASE = await getBaseUrl();
+    
     // --- 2. Функция получения VK-ссылки с бэкенда ---
     async function fetchVkLink() {
         const currentUser = getCurrentUser();

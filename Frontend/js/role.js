@@ -1,10 +1,20 @@
 // Файл: role.js - Управление ролями пользователей
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Проверка прав (только Super_Admin)
     const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
     if (!user || user.Role !== 'Super_Admin') return;
 
-    const API_BASE_URL = 'http://localhost:8080';
+    async function loadConfig() {
+    const res = await fetch('/api/config');
+    const config = await res.json();
+    return {
+        BASE_URL: config.base_url,
+        TIMEOUT: 10000,
+    };
+    }
+
+    // использование:
+    const API_BASE_URL = (await loadConfig()).BASE_URL;
     
     const modal = document.getElementById('grantRoleModal');
     const tableBody = document.getElementById('usersTableBody');
