@@ -11,8 +11,69 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 import logging
+import os
+import sys
+import asyncio
+import aiohttp
+import json
+import re
+import time
+from pathlib import Path
+from dotenv import load_dotenv, dotenv_values
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional, List
+import vk_api
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+import logging
 
-load_dotenv()
+# --- Настройка логирования (сразу) ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# --- Поиск и загрузка .env (ищем вверх от папки скрипта) ---
+def load_env():
+    script_dir = Path(__file__).resolve().parent
+    env_path = None
+    # Поднимаемся по родительским директориям, пока не найдём .env
+    for parent in script_dir.parents:
+        candidate = parent / '.env'
+        if candidate.is_file():
+            env_path = candidate
+            break
+    # Если не нашли, fallback на текущую папку скрипта
+    if not env_path:
+        env_path = script_dir / '.env'
+    
+    if env_path and env_path.is_file():
+        load_dotenv(env_path)
+        logger.info(f"✅ Загружен .env из: {env_path}")
+        # Для отладки: покажем, какие ключи загружены (только имена)
+        values = dotenv_values(env_path)
+        logger.info(f"Ключи в .env: {list(values.keys())}")
+    else:
+        logger.error("❌ Файл .env не найден ни в одной из родительских папок!")
+        print("❌ Файл .env не найден ни в одной из родительских папок! Проверьте Docker-монтирование.")
+
+load_env()
+
+# Теперь читаем переменные
+VK_TOKEN = os.getenv('VK_TOKEN')
+GROUP_ID = int(os.getenv('GROUP_ID')) if os.getenv('GROUP_ID') else None
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8080')
+API_TIMEOUT = int(os.getenv('API_TIMEOUT', 30))
+
+if not VK_TOKEN:
+    logger.error("VK_TOKEN не найден в .env файле")
+    raise ValueError("VK_TOKEN не найден в .env файле")
+if not GROUP_ID:
+    logger.error("GROUP_ID не найден в .env файле")
+    raise ValueError("GROUP_ID не найден в .env файле")
+
+
 
 VK_TOKEN = os.getenv('VK_TOKEN')
 GROUP_ID = int(os.getenv('GROUP_ID')) if os.getenv('GROUP_ID') else None

@@ -44,10 +44,10 @@ services:
       dockerfile: Dockerfile
     container_name: vk-booking-bot
     restart: unless-stopped
-    env_file:
-      - ./vk-bot/.env
     depends_on:
       - app
+    volumes:
+      - ./.env:/app/.env
 
 volumes:
   postgres_data:
