@@ -2767,6 +2767,7 @@ footer {
 .user-table-container {
     max-height: 400px;
     overflow-y: auto;
+    overflow-x: auto;
     border: 2px solid rgba(157, 0, 214, 0.15);
     border-radius: 20px;
     background: #fff;
@@ -2776,6 +2777,7 @@ footer {
 
 .user-table {
     width: 100%;
+    min-width: 600px;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 0.95rem;
@@ -2784,7 +2786,7 @@ footer {
 
 .user-table th {
     /* Плавный градиент для всей шапки */
-    background: linear-gradient(135deg, rgba(157, 0, 214, 0.08) 0%, rgba(4, 138, 241, 0.08) 100%);
+    /* background: linear-gradient(135deg, rgba(157, 0, 214, 0.08) 0%, rgba(4, 138, 241, 0.08) 100%); */
     padding: 18px 20px;
     text-align: left;
     font-weight: 600;
@@ -2798,14 +2800,14 @@ footer {
 
 /* Первый столбец с чекбоксом */
 .user-table th:first-child {
-    border-radius: 15px 0 0 0;
+    border-radius: 20px 0 0 0;
     width: 50px;
     text-align: center;
 }
 
 /* Последний столбец */
 .user-table th:last-child {
-    border-radius: 0 15px 0 0;
+    border-radius: 0 20px 0 0;
 }
 
 .user-table td {
@@ -3128,4 +3130,255 @@ footer {
     .grant-role-title {
         font-size: 1.6rem;
     }
+}
+
+/* ========== ПОИСК ========== */
+.user-search-container {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.user-search-input {
+    width: 100%;
+    padding: 14px 20px 14px 50px;
+    border: 2px solid rgba(157, 0, 214, 0.2);
+    border-radius: 15px;
+    background: rgba(157, 0, 214, 0.03);
+    color: #333;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.user-search-input:focus {
+    border-color: #9d00d6;
+    background: rgba(157, 0, 214, 0.06);
+    box-shadow: 0 0 0 4px rgba(157, 0, 214, 0.1);
+}
+
+.user-search-input::placeholder {
+    color: rgba(51, 51, 51, 0.5);
+}
+
+.user-search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(157, 0, 214, 0.5);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+@media (max-width: 480px) {
+    .user-search-input {
+        padding: 12px 15px 12px 45px;
+        font-size: 0.95rem;
+    }
+}
+
+/* ========== КРАСИВЫЙ СКРОЛЛБАР ДЛЯ МОДАЛЬНОГО ОКНА ВЫДАЧИ РОЛИ ========== */
+/* Скроллбар для таблицы пользователей */
+.user-table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.user-table-container::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+.user-table-container::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.user-table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+/* Скрываем стрелки (кнопки) скроллбара */
+.user-table-container::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Для Firefox */
+.user-table-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 0, 214, 0.3) rgba(157, 0, 214, 0.05);
+}
+
+/* Скроллбар для всего модального окна (если контент не помещается) */
+.grant-role-modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+/* Скрываем стрелки */
+.grant-role-modal-content::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Для Firefox */
+.grant-role-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 0, 214, 0.3) rgba(157, 0, 214, 0.05);
+}
+
+/* ========== ГЛОБАЛЬНЫЙ СКРОЛЛБАР ДЛЯ ВСЕГО САЙТА ========== */
+/* Скроллбар для body */
+body::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+body::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+body::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Для Firefox */
+body {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 0, 214, 0.3) rgba(157, 0, 214, 0.05);
+}
+
+/* ========== СКРОЛЛБАР ДЛЯ МОДАЛЬНОГО ОКНА ВЫДАЧИ РОЛИ ========== */
+.grant-role-modal-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+.grant-role-modal-content::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Для Firefox */
+.grant-role-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 0, 214, 0.3) rgba(157, 0, 214, 0.05);
+}
+
+/* ========== СКРОЛЛБАР ДЛЯ ВСЕХ МОДАЛЬНЫХ ОКОН ========== */
+.modal-content::-webkit-scrollbar,
+.view-modal-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.view-modal-content::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.view-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.view-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+.modal-content::-webkit-scrollbar-button,
+.view-modal-content::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Для Firefox */
+.modal-content,
+.view-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 0, 214, 0.3) rgba(157, 0, 214, 0.05);
+}
+
+/* ========== СКРОЛЛБАР ДЛЯ ВСЕХ ЭЛЕМЕНТОВ С ПРОКРУТКОЙ ========== */
+/* Универсальный класс для любых элементов со скроллом */
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+*::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.user-table thead {
+    background: linear-gradient(135deg, rgba(157, 0, 214, 0.08) 0%, rgba(4, 138, 241, 0.08) 100%);
 }
