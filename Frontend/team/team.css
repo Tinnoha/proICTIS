@@ -393,3 +393,103 @@ header p {
         height: 22px; /* Размер логотипа как на главной в мобилках */
     }
 }
+
+/* ========== СКРОЛЛБАР ДЛЯ МОДАЛЬНОГО ОКНА ВЫДАЧИ РОЛИ ========== */
+.grant-role-modal-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.grant-role-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+.grant-role-modal-content::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Для Firefox */
+.grant-role-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 0, 214, 0.3) rgba(157, 0, 214, 0.05);
+}
+
+/* ========== СКРОЛЛБАР ДЛЯ ВСЕХ МОДАЛЬНЫХ ОКОН ========== */
+.modal-content::-webkit-scrollbar,
+.view-modal-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.view-modal-content::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.view-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.view-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+.modal-content::-webkit-scrollbar-button,
+.view-modal-content::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Для Firefox */
+.modal-content,
+.view-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(157, 0, 214, 0.3) rgba(157, 0, 214, 0.05);
+}
+
+/* ========== СКРОЛЛБАР ДЛЯ ВСЕХ ЭЛЕМЕНТОВ С ПРОКРУТКОЙ ========== */
+/* Универсальный класс для любых элементов со скроллом */
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: rgba(157, 0, 214, 0.05);
+    border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(157, 0, 214, 0.3);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 0, 214, 0.5);
+}
+
+*::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}

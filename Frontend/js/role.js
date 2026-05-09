@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Открытие модалки
         roleBtn.addEventListener('click', () => {
             modal.classList.add('active');
+            document.body.style.overflow = 'hidden';  // ✅ БЛОКИРУЕМ СКРОЛЛ (как в script.js)
             loadUsers();
         });
     }
@@ -84,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Закрытие модалки
     modal.querySelector('.modal-close').addEventListener('click', () => {
         modal.classList.remove('active');
+        document.body.style.overflow = '';  // ✅ РАЗБЛОКИРУЕМ СКРОЛЛ
         selectedUsers.clear();
         updateSelectAll();
     });
@@ -91,6 +93,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.classList.remove('active');
+            document.body.style.overflow = '';  // ✅ РАЗБЛОКИРУЕМ СКРОЛЛ
+            selectedUsers.clear();
+            updateSelectAll();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';  // ✅ РАЗБЛОКИРУЕМ СКРОЛЛ
             selectedUsers.clear();
             updateSelectAll();
         }
@@ -148,6 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 tableBody.appendChild(tr);
             });
+            setupSearch();
             
         } catch (error) {
             console.error('Ошибка:', error);
@@ -197,9 +210,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Student': 'Студент'
         }[newRole];
         
-        if (!confirm(`Выдать роль "${roleText}" ${selectedUsers.size} пользователю(ям)?`)) {
-            return;
-        }
+        // if (!confirm(`Выдать роль "${roleText}" ${selectedUsers.size} пользователю(ям)?`)) {
+        //     return;
+        // }
         
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Обработка...</span>';
@@ -224,13 +237,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const results = await Promise.allSettled(promises);
         results.forEach(r => r.value === 'success' ? successCount++ : errorCount++);
         
-        alert(`✅ Успешно: ${successCount}\n❌ Ошибок: ${errorCount}`);
+        console.log(`✅ Успешно: ${successCount}\n❌ Ошибок: ${errorCount}`);
         
         modal.classList.remove('active');
         selectedUsers.clear();
         updateSelectAll();
         confirmBtn.disabled = false;
-        confirmBtn.innerHTML = '<i class="fas fa-user-shield"></i> <span>Выдать роль</span>';
+        confirmBtn.innerHTML = '<i class="fas fa-user-plus"></i> <span>Выдать роль</span>';
         roleSelect.value = '';
     });
 
@@ -241,5 +254,71 @@ document.addEventListener('DOMContentLoaded', async () => {
             'Super_Admin': 'Главный администратор'
         };
         return roles[role] || role;
+    }
+
+    function setupSearch() {
+        const searchInput = document.getElementById('userSearchInput');
+        if (!searchInput) return;
+        
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const rows = tableBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // Обработка кастомного dropdown для выбора роли
+    const roleDropdownTrigger = document.getElementById('roleDropdownTrigger');
+    const roleDropdownMenu = document.getElementById('roleDropdownMenu');
+    const roleHiddenInput = document.getElementById('newRoleSelect');
+    const roleDropdownSelected = document.querySelector('#roleDropdownTrigger .dropdown-selected');
+
+    if (roleDropdownTrigger && roleDropdownMenu && roleHiddenInput) {
+        // Открытие/закрытие
+        roleDropdownTrigger.addEventListener('click', () => {
+            roleDropdownMenu.classList.toggle('open');
+            roleDropdownTrigger.classList.toggle('active');
+        });
+
+        // Закрытие при клике вне
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#roleCustomDropdown')) {
+                roleDropdownMenu.classList.remove('open');
+                roleDropdownTrigger.classList.remove('active');
+            }
+        });
+
+        // Выбор опции
+        roleDropdownMenu.addEventListener('click', (e) => {
+            const option = e.target.closest('.dropdown-option');
+            if (option) {
+                const value = option.dataset.value;
+                const text = option.textContent.trim();
+                
+                // Обновляем видимый текст
+                roleDropdownSelected.textContent = text;
+                
+                // Обновляем скрытый инпут (чтобы старый код работал)
+                roleHiddenInput.value = value;
+                
+                // Подсветка выбранной опции
+                roleDropdownMenu.querySelectorAll('.dropdown-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
+                
+                // Закрываем меню
+                roleDropdownMenu.classList.remove('open');
+                roleDropdownTrigger.classList.remove('active');
+            }
+        });
     }
 });

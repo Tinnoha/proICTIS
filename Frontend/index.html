@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Проектное пространство ПРОИКТИБ</title>
+    <title>Проектное Пространство ПроИКТИБ</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -261,7 +261,10 @@
             <p style="text-align: center; color: #666; margin-bottom: 25px; font-size: 1.1rem;">
                 Выберите пользователя, а затем назначьте ему роль
             </p>
-            
+            <div class="user-search-container">
+                <i class="fas fa-search user-search-icon"></i>
+                <input type="text" id="userSearchInput" class="user-search-input" placeholder="Поиск...">
+            </div>
             <div class="user-table-container">
                 <table class="user-table">
                     <thead>
@@ -281,15 +284,26 @@
             </div>
             
             <div class="role-selection-row">
-                <label for="newRoleSelect" style="font-weight: 600; color: #333; margin-right: 15px;">
+                <label style="font-weight: 600; color: #333; margin-right: 15px;">
                     Новая роль:
                 </label>
-                <select id="newRoleSelect" class="role-select">
-                    <option value="">Выберите роль...</option>
-                    <option value="Super_Admin">Главный администратор</option>
-                    <option value="Admin">Администратор</option>
-                    <option value="Student">Студент</option>
-                </select>
+                
+                <!-- Кастомный dropdown (как в оборудовании) -->
+                <div class="custom-dropdown" id="roleCustomDropdown" style="flex: 1; max-width: 300px;">
+                    <div class="dropdown-trigger" id="roleDropdownTrigger">
+                        <span class="dropdown-selected">Выберите роль...</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </div>
+                    <div class="dropdown-menu" id="roleDropdownMenu">
+                        <div class="dropdown-option" data-value="">Выберите роль...</div>
+                        <div class="dropdown-option" data-value="Super_Admin">Главный администратор</div>
+                        <div class="dropdown-option" data-value="Admin">Администратор</div>
+                        <div class="dropdown-option" data-value="Student">Студент</div>
+                    </div>
+                </div>
+                
+                <!-- Скрытый инпут для отправки данных -->
+                <input type="hidden" id="newRoleSelect" value="">
             </div>
             
             <button class="grant-role-btn" id="confirmGrantRoleBtn">
@@ -300,6 +314,7 @@
     </div>
 
     <!-- Подключаем скрипты -->
+     <script src="./js/config.js"></script>
     <script src="./js/api.js"></script>
     <script src="./js/equipment.js"></script>
     <script src="./js/script.js"></script>
