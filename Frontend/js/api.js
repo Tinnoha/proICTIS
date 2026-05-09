@@ -1,5 +1,5 @@
 const API_CONFIG = {
-    BASE_URL: window.__APP_CONFIG__.API_BASE_URL,       // будет заполнено при инициализации
+    BASE_URL: '',   // будет заполнено при инициализации
     TIMEOUT: 10000,
 };
 
