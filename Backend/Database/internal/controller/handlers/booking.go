@@ -174,7 +174,7 @@ func (h *BookingHandlers) CreateBooking(w http.ResponseWriter, r *http.Request) 
 	var bok BookDTO
 	err = json.Unmarshal(rawBody, &bok)
 	if err != nil {
-		panic(string(rawBody)) //перехватиться если что в мидлвеире, выдаст 500 ошибку
+		panic(string(rawBody))
 	}
 
 	booking, err := h.bookingUsecase.Book(bok.UserId, bok.EnviromtId, bok.Start, bok.End)

@@ -1,9 +1,19 @@
 // ==========================================
 // EQUIPMENT DATA (API версия)
 // ==========================================
-const API_URL = 'http://localhost:8080';
 let equipmentData = [];
 let equipmentTypes = [];
+
+let cachedBaseUrl = null;
+
+async function getBaseUrl() {
+    if (!cachedBaseUrl) {
+        const res = await fetch('/api/config');
+        const config = await res.json();
+        cachedBaseUrl = config.base_url;
+    }
+    return cachedBaseUrl;
+}
 
 // Вспомогательные функции для работы с авторизацией
 function getAuthToken() {
@@ -19,7 +29,8 @@ function getCurrentUser() {
 // Загрузка оборудования из API
 async function loadEquipmentData() {
     try {
-        const response = await fetch(`${API_URL}/Equipment`);
+        const baseUrl = await getBaseUrl();                     // ← добавить
+        const response = await fetch(`${baseUrl}/Equipment`);   // ← исправить
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -34,7 +45,7 @@ async function loadEquipmentData() {
             
             // 🔧 Если это локальный путь (/static/...), добавляем API_URL
             if (imageUrl && imageUrl.startsWith('/static/')) {
-                imageUrl = `${API_URL}${imageUrl}`;
+                imageUrl = `${baseUrl}${imageUrl}`;
             }
             
             return {
@@ -61,7 +72,8 @@ async function loadEquipmentData() {
 // Загрузка типов оборудования
 async function loadEquipmentTypes() {
     try {
-        const response = await fetch(`${API_URL}/Types`);
+        const baseUrl = await getBaseUrl();
+        const response = await fetch(`${baseUrl}/Types`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -115,7 +127,8 @@ async function addEquipment(item) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/Equipment`, {
+        const baseUrl = await getBaseUrl();
+        const response = await fetch(`${baseUrl}/Equipment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -161,7 +174,8 @@ async function deleteEquipment(id) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/Equipment/${id}`, {
+        const baseUrl = await getBaseUrl();
+        const response = await fetch(`${baseUrl}/Equipment/${id}`, {    
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'

@@ -35,17 +35,19 @@ func (s *HTTPServer) Run() {
 	fmt.Println("We start HTTP SERVER")
 	router := mux.NewRouter()
 
+	router.Path("/api/config").HandlerFunc(handlers.ConfigHandler)
+
 	router.Path("/Regist").HandlerFunc(s.authHandler.Regist)
 	router.Path("/callback").HandlerFunc(s.authHandler.RegistCallback)
 	//WORK
 
-	router.Path("/User/vk").Methods("GET").HandlerFunc(s.userHandler.CreateLink)
+	router.Path("/User/vk").Methods("POST").HandlerFunc(s.userHandler.CreateLink)
 	router.Path("/User/vk").Methods("PATCH").HandlerFunc(s.userHandler.ConnectVk)
 	router.Path("/User/email").Methods("GET").HandlerFunc(s.userHandler.GetUserByEmail)
 	router.Path("/User/admin").Methods("PATCH").HandlerFunc(s.userHandler.ChangeRole)
 	router.Path("/User/by-vk").Methods("GET").HandlerFunc(s.userHandler.GetUserByVkId)
 	router.Path("/User/{id}").Methods("GET").HandlerFunc(s.userHandler.GetUserById)
-	router.Path("/User").Methods("GET").HandlerFunc(s.userHandler.GetAll)
+	router.Path("/User").Methods("POST").HandlerFunc(s.userHandler.GetAll)
 	//WORK
 
 	router.Path("/Equipment").Methods("GET").HandlerFunc(s.equipmentHandler.GetAllEquipment)

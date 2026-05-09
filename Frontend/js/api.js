@@ -1,11 +1,16 @@
-// ==========================================
-// API CLIENT для Equipment Booking System
-// ==========================================
-
 const API_CONFIG = {
-    BASE_URL: 'http://localhost:8080',
+    BASE_URL: '',       // будет заполнено при инициализации
     TIMEOUT: 10000,
 };
+
+async function initBaseUrl() {
+    if (!API_CONFIG.BASE_URL) {
+        const res = await fetch('/api/config');
+        if (!res.ok) throw new Error('Не удалось загрузить конфигурацию');
+        const config = await res.json();
+        API_CONFIG.BASE_URL = config.base_url;   // ← теперь строка
+    }
+}
 
 // ==========================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -71,7 +76,7 @@ async function fetchWithTimeout(url, options = {}, timeout = API_CONFIG.TIMEOUT)
 // AUTH API
 // ==========================================
 
-function loginWithYandex() {
+async function loginWithYandex() {
     window.location.href = `${API_CONFIG.BASE_URL}/Regist`;
 }
 
@@ -338,6 +343,8 @@ function isOAuthCallback() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await initBaseUrl();   // ← обязательно!
+
     if (isOAuthCallback()) {
         await handleOAuthCallback();
         if (window.history.replaceState) {

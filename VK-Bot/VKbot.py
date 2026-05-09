@@ -5,14 +5,75 @@ import json
 import re
 import time
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional, List
+import vk_api
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+import logging
+import os
+import sys
+import asyncio
+import aiohttp
+import json
+import re
+import time
+from pathlib import Path
+from dotenv import load_dotenv, dotenv_values
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional, List
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 import logging
 
-load_dotenv()
+# --- Настройка логирования (сразу) ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# --- Поиск и загрузка .env (ищем вверх от папки скрипта) ---
+def load_env():
+    script_dir = Path(__file__).resolve().parent
+    env_path = None
+    # Поднимаемся по родительским директориям, пока не найдём .env
+    for parent in script_dir.parents:
+        candidate = parent / '.env'
+        if candidate.is_file():
+            env_path = candidate
+            break
+    # Если не нашли, fallback на текущую папку скрипта
+    if not env_path:
+        env_path = script_dir / '.env'
+    
+    if env_path and env_path.is_file():
+        load_dotenv(env_path)
+        logger.info(f"✅ Загружен .env из: {env_path}")
+        # Для отладки: покажем, какие ключи загружены (только имена)
+        values = dotenv_values(env_path)
+        logger.info(f"Ключи в .env: {list(values.keys())}")
+    else:
+        logger.error("❌ Файл .env не найден ни в одной из родительских папок!")
+        print("❌ Файл .env не найден ни в одной из родительских папок! Проверьте Docker-монтирование.")
+
+load_env()
+
+# Теперь читаем переменные
+VK_TOKEN = os.getenv('VK_TOKEN')
+GROUP_ID = int(os.getenv('GROUP_ID')) if os.getenv('GROUP_ID') else None
+API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8080')
+API_TIMEOUT = int(os.getenv('API_TIMEOUT', 30))
+
+if not VK_TOKEN:
+    logger.error("VK_TOKEN не найден в .env файле")
+    raise ValueError("VK_TOKEN не найден в .env файле")
+if not GROUP_ID:
+    logger.error("GROUP_ID не найден в .env файле")
+    raise ValueError("GROUP_ID не найден в .env файле")
+
+
 
 VK_TOKEN = os.getenv('VK_TOKEN')
 GROUP_ID = int(os.getenv('GROUP_ID')) if os.getenv('GROUP_ID') else None
@@ -118,7 +179,9 @@ class EquipmentAPIClient:
         return []
     
     async def cancel_user_booking(self, booking_id: str) -> bool:
-        """Отменить бронирование (для обычного пользователя)"""
+        """Отменить бронирование (для обычного пользователя) - не поддерживается бэкендом без admin_id"""
+        # Этот метод не работает в текущей версии API (требуется admin_id)
+        # Оставлен для совместимости, но не используется в основном сценарии
         data = {"status": "Canceled"}
         result = await self._request("PUT", f"/Booking/{booking_id}", data=data)
         return result is not None
@@ -127,7 +190,7 @@ class EquipmentAPIClient:
         """Подтвердить бронирование (только для админа)"""
         data = {
             "admin_id": admin_id,
-            "status": "Confirmed"
+            "status": "Active"
         }
         result = await self._request("PUT", f"/Booking/{booking_id}", data=data)
         return result is not None
@@ -136,7 +199,7 @@ class EquipmentAPIClient:
         """Отклонить бронирование (только для админа)"""
         data = {
             "admin_id": admin_id,
-            "status": "Canceled"
+            "status": "Cancel"
         }
         result = await self._request("PUT", f"/Booking/{booking_id}", data=data)
         return result is not None
@@ -388,7 +451,7 @@ class VKBookingBot:
         for eq in active_equipment[start_idx:end_idx]:
             message += f"**{eq.get('name', 'Без названия')}**\n"
             message += f"Тип: {eq.get('type', 'Не указан')}\n"
-            message += f"Аудитория: {eq.get('auditory', 'Не указана')}\n\n"
+            message += "Аудитория: И-225\n"
         
         await self.send_message(peer_id, message, keyboard=keyboard)
     
@@ -457,82 +520,11 @@ class VKBookingBot:
         await self.send_message(peer_id, message)
     
     async def cancel_booking_flow(self, peer_id: int, vk_id: int):
-        if vk_id not in self.user_data_cache:
-            await self.send_message(peer_id, "❌ Сначала авторизуйтесь")
-            return
-    
-        user_id = self.get_user_id(vk_id)
-        if not user_id:
-            await self.send_message(peer_id, "❌ Ошибка: ID пользователя не найден")
-            return
-    
-        bookings = await self.api.get_user_bookings(user_id)
-    
-        if not bookings:
-            await self.send_message(peer_id, "📭 Нет бронирований")
-            return
-    
-        cancellable_bookings = [b for b in bookings if b.get('Status') in ['Waiting answer', 'Confirmed', 'Active']]
-    
-        if not cancellable_bookings:
-            await self.send_message(peer_id, "📭 Нет бронирований, которые можно отменить")
-            return
-    
-        keyboard = VkKeyboard(one_time=True)
-        for booking in cancellable_bookings[:10]:
-            equipment_id = booking.get('EquipmentId')
-            equipment = await self.api.get_equipment_by_id(equipment_id)
-            if equipment:
-                status_emoji = "⏳" if booking.get('Status') == 'Waiting answer' else "✅"
-                button_text = f"{status_emoji} {equipment.get('name')[:30]}"
-                keyboard.add_button(button_text, color=VkKeyboardColor.NEGATIVE)
-                keyboard.add_line()
-    
-        keyboard.add_button("🔙 Назад", color=VkKeyboardColor.PRIMARY)
-    
-        self.user_states[vk_id] = {
-            'state': 'cancelling_booking',
-            'bookings': cancellable_bookings
-        }
-    
-        await self.send_message(peer_id, "❌ **Выберите бронирование для отмены:**", keyboard=keyboard)
+        """Отмена бронирования (не поддерживается без admin_id, оставлен заглушкой)"""
+        await self.send_message(peer_id, "❌ Функция отмены бронирования временно недоступна. Обратитесь к администратору.")
     
     async def process_booking_cancellation(self, peer_id: int, vk_id: int, text: str):
-        if vk_id not in self.user_states:
-            return
-    
-        state = self.user_states[vk_id]
-        if state.get('state') != 'cancelling_booking':
-            return
-    
-        if text == "🔙 Назад":
-            del self.user_states[vk_id]
-            await self.send_message(peer_id, "❌ Отмена бронирования отменена")
-            return
-    
-        clean_text = text
-        if clean_text.startswith("⏳ ") or clean_text.startswith("✅ ") or clean_text.startswith("❌ "):
-            clean_text = clean_text[2:]
-    
-        for booking in state['bookings']:
-            equipment_id = booking.get('EquipmentId')
-            equipment = await self.api.get_equipment_by_id(equipment_id)
-            if equipment and equipment.get('name') == clean_text:
-                booking_id = booking.get('ID')
-                success = await self.api.cancel_user_booking(booking_id)
-                if success:
-                    await self.send_message(peer_id, f"✅ Бронирование '{equipment.get('name')}' успешно отменено")
-                    self.user_data_cache.pop(vk_id, None)
-                    user = await self.api.get_user_by_vk_id(vk_id)
-                    if user:
-                        self.user_data_cache[vk_id] = user
-                else:
-                    await self.send_message(peer_id, f"❌ Ошибка при отмене бронирования '{equipment.get('name')}'")
-            
-                del self.user_states[vk_id]
-                return
-    
-        await self.send_message(peer_id, "❌ Бронирование не найдено")
+        await self.send_message(peer_id, "❌ Функция отмены бронирования временно недоступна.")
     
     async def handle_equipment_selection(self, peer_id: int, vk_id: int, text: str):
         equipment = self.paginator.get_cached_equipment(vk_id)
@@ -619,11 +611,15 @@ class VKBookingBot:
             selected_date = datetime.strptime(date_str, "%d.%m.%Y").date()
             start_time = datetime.combine(selected_date, datetime.strptime("12:00", "%H:%M").time())
             
-            if start_time < datetime.now():
+            # Приводим к UTC для корректной работы с сервером
+            local_tz = timezone(timedelta(hours=3))  # Московское время UTC+3
+            start_local = start_time.replace(tzinfo=local_tz)
+            
+            if start_local < datetime.now(local_tz):
                 await self.send_message(peer_id, "❌ Нельзя бронировать в прошлом. Выберите будущую дату.")
                 return
             
-            state['start_time'] = start_time
+            state['start_time'] = start_local
             state['state'] = 'booking_duration'
             
             keyboard = VkKeyboard(one_time=False)
@@ -637,7 +633,7 @@ class VKBookingBot:
             await self.send_message(
                 peer_id,
                 f"⏰ **Выберите продолжительность бронирования:**\n\n"
-                f"📅 Начало: {start_time.strftime('%d.%m.%Y в 12:00')}\n\n"
+                f"📅 Начало: {start_local.strftime('%d.%m.%Y в 12:00')}\n\n"
                 f"⚠️ Максимум 7 дней",
                 keyboard=keyboard
             )
@@ -662,33 +658,37 @@ class VKBookingBot:
             days = int(text.split()[0])
         
             if 1 <= days <= 7:
-                end_time = state['start_time'] + timedelta(days=days)
-            
+                end_local = state['start_time'] + timedelta(days=days)
+                
+                # Преобразуем в UTC для отправки на сервер
+                start_utc = state['start_time'].astimezone(timezone.utc)
+                end_utc = end_local.astimezone(timezone.utc)
+                
+                start_with_tz = start_utc.isoformat(timespec='seconds').replace('+00:00', 'Z')
+                end_with_tz = end_utc.isoformat(timespec='seconds').replace('+00:00', 'Z')
+                
                 user_id = self.get_user_id(vk_id)
                 if not user_id:
                     await self.send_message(peer_id, "❌ Ошибка: ID пользователя не найден")
                     del self.user_states[vk_id]
                     return
-            
+                
                 equipment = state['equipment']
-            
-                start_with_tz = state['start_time'].isoformat() + '+03:00'
-                end_with_tz = end_time.isoformat() + '+03:00'
-            
+                
                 booking = await self.api.create_booking(
                     user_id,
                     equipment.get('id'),
                     start_with_tz,
                     end_with_tz
                 )
-            
+                
                 if booking:
                     await self.send_message(
                         peer_id,
                         f"✅ **Бронирование создано!**\n\n"
                         f"Оборудование: {equipment.get('name')}\n"
-                        f"Начало: {state['start_time'].strftime('%d.%m.%Y в 12:00')}\n"
-                        f"Конец: {end_time.strftime('%d.%m.%Y в 12:00')}\n"
+                        f"Начало: {state['start_time'].strftime('%d.%m.%Y в 12:00')} (МСК)\n"
+                        f"Конец: {end_local.strftime('%d.%m.%Y в 12:00')} (МСК)\n"
                         f"Статус: Ожидает подтверждения администратора",
                         keyboard=self.create_main_keyboard(vk_id)
                     )
@@ -698,7 +698,7 @@ class VKBookingBot:
                         "❌ Ошибка создания бронирования.\n"
                         "Возможно, оборудование уже забронировано на это время."
                     )
-            
+                
                 del self.user_states[vk_id]
             else:
                 await self.send_message(peer_id, "❌ Количество дней должно быть от 1 до 7")

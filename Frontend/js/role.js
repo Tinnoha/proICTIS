@@ -1,12 +1,21 @@
 // Файл: role.js - Управление ролями пользователей
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Проверка прав (только Super_Admin)
     const user = (typeof getCurrentUser === 'function') ? getCurrentUser() : null;
     if (!user || user.Role !== 'Super_Admin') return;
 
-    const API_BASE_URL = 'http://localhost:8080';
+    async function loadConfig() {
+    const res = await fetch('/api/config');
+    const config = await res.json();
+    return {
+        BASE_URL: config.base_url,
+        TIMEOUT: 10000,
+    };
+    }
+
+    // использование:
+    const API_BASE_URL = (await loadConfig()).BASE_URL;
     
-    // Элементы
     const modal = document.getElementById('grantRoleModal');
     const tableBody = document.getElementById('usersTableBody');
     const selectAllCheckbox = document.getElementById('selectAllUsers');
@@ -201,12 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Отправляем запросы параллельно
         const promises = Array.from(selectedUsers).map(userId => 
             fetch(`${API_BASE_URL}/User/admin`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    admin_id: user.id,
-                    target_user_id: userId,
-                    new_role: newRole
+                    admin_id: user.Id || user.id,
+                    user_id: userId,
+                    role: newRole
                 })
             }).then(res => res.ok ? 'success' : 'error')
               .catch(() => 'error')

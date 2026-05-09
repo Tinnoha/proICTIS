@@ -742,14 +742,13 @@ async function performDelete() {
 async function deleteEquipmentType(typeId) {
     const user = getCurrentUser();
     if (!user) {
-        // alert('Пользователь не авторизован');
         console.log('Пользователь не авторизован');
         return false;
     }
     const payload = { admin_id: user.Id };
 
     try {
-        const response = await fetch(`${API_URL}/Types/${typeId}`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/Types/${typeId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1083,6 +1082,16 @@ if (addBtn) {
         addBtn.disabled = true;
         addBtn.textContent = 'Загрузка...';
 
+        async function loadConfig() {
+             const res = await fetch('/api/config');
+             const config = await res.json();
+            return {
+                BASE_URL: config.base_url,
+                TIMEOUT: 10000,
+            };
+        }
+
+
         try {
             const user = getCurrentUser();
             if (!user || !user.Id) {
@@ -1092,8 +1101,10 @@ if (addBtn) {
             const formData = new FormData();
             formData.append('image', selectedFile);
             formData.append('admin_id', user.Id);
+
+            const API_CONFIG = await loadConfig();
             
-            const uploadResponse = await fetch('http://localhost:8080/api/upload', {
+            const uploadResponse = await fetch(`${API_CONFIG.BASE_URL}/api/upload`, {
                 method: 'POST',
                 body: formData
             });
@@ -1234,14 +1245,11 @@ async function addEquipmentType(typeName) {
     };
 
     try {
-        const response = await fetch(`${API_URL}/Types`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/Types`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Ошибка ${response.status}: ${errorText}`);
